@@ -23,10 +23,10 @@
     --primary: 232 32% 67%;
     --primary-foreground: 0 0% 100%;
 
-    /* Brand accents from gradient */
-    --brand-rose: 343 28% 71%;       /* #C7A3B1 */
-    --brand-teal: 195 39% 64%;       /* #7FB7C9 */
-    --brand-iris: 232 32% 67%;       /* #8D93C7 */
+    /* Brand accents from gradient (pastel for light) */
+    --brand-rose: 336 100% 92%;       /* #FFD6E8 */
+    --brand-teal: 176 74% 88%;        /* #C8F7F4 */
+    --brand-iris: 264 100% 92%;       /* #E6D5FF */
 
     --secondary: 220 25% 94%;
     --secondary-foreground: 222 35% 18%;
@@ -98,9 +98,9 @@
     --primary: 232 50% 72%;
     --primary-foreground: 226 32% 10%;
 
-    --brand-rose: 343 38% 74%;
-    --brand-teal: 195 45% 68%;
-    --brand-iris: 232 50% 74%;
+    --brand-rose: 343 28% 71%;       /* #C7A3B1 - darker for dark mode */
+    --brand-teal: 195 39% 64%;       /* #7FB7C9 */
+    --brand-iris: 232 32% 67%;       /* #8D93C7 */
 
     --secondary: 226 22% 16%;
     --secondary-foreground: 220 25% 95%;
