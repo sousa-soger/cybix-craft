@@ -217,7 +217,7 @@ export const CreatePackage = () => {
                     className={cn(
                       "flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-semibold transition-base",
                       done && "bg-success text-success-foreground border-success",
-                      active && "brand-gradient-bg text-white border-transparent shadow-glow",
+                      active && "brand-gradient-bg text-[hsl(var(--on-brand))] border-transparent shadow-glow",
                       !done && !active && "border-border text-muted-foreground",
                     )}
                   >

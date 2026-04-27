@@ -47,7 +47,7 @@ export const Topbar = ({ title, subtitle, actions }: TopbarProps) => {
         </Button>
 
         <Avatar className="h-9 w-9 ring-2 ring-border">
-          <AvatarFallback className="brand-gradient-bg text-white text-xs font-semibold">
+          <AvatarFallback className="brand-gradient-bg text-[hsl(var(--on-brand))] text-xs font-semibold">
             DA
           </AvatarFallback>
         </Avatar>

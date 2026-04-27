@@ -20,7 +20,7 @@ export const Logo = ({ className, showText = true, size = "md" }: LogoProps) => 
           dims,
         )}
       >
-        <Boxes size={iconSize} className="text-white" strokeWidth={2.25} />
+        <Boxes size={iconSize} className="text-[hsl(var(--on-brand))]" strokeWidth={2.25} />
       </div>
       {showText && (
         <div className="flex flex-col leading-none">

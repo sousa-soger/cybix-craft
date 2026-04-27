@@ -48,7 +48,7 @@ const Team = () => (
           {members.map((m) => (
             <li key={m.email} className="flex items-center gap-4 p-4 hover:bg-secondary/40 transition-base">
               <Avatar className="h-10 w-10">
-                <AvatarFallback className="brand-gradient-bg text-white text-xs font-semibold">{m.initials}</AvatarFallback>
+                <AvatarFallback className="brand-gradient-bg text-[hsl(var(--on-brand))] text-xs font-semibold">{m.initials}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium">{m.name}</div>
