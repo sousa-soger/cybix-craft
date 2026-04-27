@@ -189,6 +189,11 @@
 
   .brand-gradient-bg {
     background: var(--gradient-brand);
+    color: hsl(var(--on-brand));
+  }
+
+  .on-brand {
+    color: hsl(var(--on-brand));
   }
 
   .brand-soft-bg {
