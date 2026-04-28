@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import Index from "./pages/Index.tsx";
+import Projects from "./pages/Projects.tsx";
 import Create from "./pages/Create.tsx";
 import Packages from "./pages/Packages.tsx";
 import Deployments from "./pages/Deployments.tsx";
@@ -26,6 +27,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/projects" element={<Projects />} />
             <Route path="/create" element={<Create />} />
             <Route path="/packages" element={<Packages />} />
             <Route path="/deployments" element={<Deployments />} />
