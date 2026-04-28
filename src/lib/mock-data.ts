@@ -322,3 +322,72 @@ export function mockChangeset(base: string, target: string): ChangeSet | null {
   const sizeMB = +(8 + (seed % 30) + Math.random() * 4).toFixed(1);
   return { added, modified, deleted, estimatedSizeMB: sizeMB };
 }
+
+export type TeamRole = "owner" | "maintainer" | "creator" | "deployer" | "viewer";
+export type MemberStatus = "active" | "pending";
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  initials: string;
+  role: TeamRole;
+  status: MemberStatus;
+  joinedAt: string;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  slug: string;
+  avatarColor: string;
+  members: TeamMember[];
+  projectIds: string[];
+}
+
+export const teams: Team[] = [
+  {
+    id: "t1",
+    name: "Cybix Core",
+    slug: "cybix-core",
+    avatarColor: "from-brand-rose to-brand-iris",
+    projectIds: ["p1", "p2", "p4"],
+    members: [
+      { id: "m1", name: "Demir A.", email: "demir@cybix.io", initials: "DA", role: "owner", status: "active", joinedAt: "Jan 2024" },
+      { id: "m2", name: "Selin K.", email: "selin@cybix.io", initials: "SK", role: "maintainer", status: "active", joinedAt: "Feb 2024" },
+      { id: "m3", name: "Mert O.", email: "mert@cybix.io", initials: "MO", role: "creator", status: "active", joinedAt: "Mar 2024" },
+      { id: "m4", name: "Ayşe T.", email: "ayse@cybix.io", initials: "AT", role: "deployer", status: "active", joinedAt: "Apr 2024" },
+      { id: "m5", name: "Kaan B.", email: "kaan@cybix.io", initials: "KB", role: "viewer", status: "pending", joinedAt: "Pending" },
+    ],
+  },
+  {
+    id: "t2",
+    name: "Atlas Squad",
+    slug: "atlas-squad",
+    avatarColor: "from-brand-teal to-brand-iris",
+    projectIds: ["p1", "p3"],
+    members: [
+      { id: "m6", name: "Lara M.", email: "lara@cybix.io", initials: "LM", role: "maintainer", status: "active", joinedAt: "Mar 2024" },
+      { id: "m7", name: "Onur P.", email: "onur@cybix.io", initials: "OP", role: "creator", status: "active", joinedAt: "Apr 2024" },
+      { id: "m8", name: "Ece D.", email: "ece@cybix.io", initials: "ED", role: "deployer", status: "active", joinedAt: "May 2024" },
+      { id: "m9", name: "newhire@cybix.io", email: "newhire@cybix.io", initials: "NH", role: "viewer", status: "pending", joinedAt: "Pending" },
+    ],
+  },
+];
+
+export const ROLE_META: Record<TeamRole, { label: string; desc: string; color: string }> = {
+  owner:      { label: "Owner",           desc: "Full control, billing, role configuration",         color: "from-brand-rose to-brand-iris" },
+  maintainer: { label: "Maintainer",      desc: "Configure projects, repositories and policies",     color: "from-brand-iris to-brand-teal" },
+  creator:    { label: "Package Creator", desc: "Create packages, cannot deploy to PROD",            color: "from-brand-teal to-brand-iris" },
+  deployer:   { label: "Deployer",        desc: "Deploy approved packages to permitted environments", color: "from-brand-rose to-brand-teal" },
+  viewer:     { label: "Viewer",          desc: "Read-only access to packages and deployments",      color: "from-brand-iris to-brand-rose" },
+};
+
+export const CURRENT_USER_ID = "m1";
+
+export const BRAND_GRADIENT_OPTIONS: { id: string; value: string }[] = [
+  { id: "rose-iris", value: "from-brand-rose to-brand-iris" },
+  { id: "teal-iris", value: "from-brand-teal to-brand-iris" },
+  { id: "iris-teal", value: "from-brand-iris to-brand-teal" },
+  { id: "rose-teal", value: "from-brand-rose to-brand-teal" },
+];
