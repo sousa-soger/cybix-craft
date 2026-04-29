@@ -318,19 +318,10 @@ const Projects = () => {
                   </div>
                 )}
               </article>
-          );
-        };
-        return (
-          <div className="space-y-4">
-            {activeProject && renderCard(activeProject, true)}
-            {others.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {others.map((p) => renderCard(p, false))}
-              </div>
-            )}
-          </div>
-        );
-      })()}
+            );
+          })}
+        </div>
+      )}
 
       <ProjectDialog
         open={dialogOpen}
