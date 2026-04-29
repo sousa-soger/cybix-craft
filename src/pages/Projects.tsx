@@ -137,22 +137,22 @@ const Projects = () => {
         </div>
       )}
 
-      {/* Grid (active card pulled out to its own full-width row above) */}
-      {filtered.length > 0 && (() => {
-        const activeProject = filtered.find((p) => p.id === selectedId) ?? null;
-        const others = activeProject ? filtered.filter((p) => p.id !== activeProject.id) : filtered;
-        const renderCard = (p: Project, active: boolean) => {
-          const projectRepos = repositories.filter((r) => r.projectId === p.id);
-          const projectTeams = teams.filter((t) => t.projectIds.includes(p.id));
-          const repoCount = projectRepos.length;
-          const teamCount = projectTeams.length;
-          return (
+      {/* Grid — active card expands in place via col-span-full, leaving its original slot empty */}
+      {filtered.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
+          {filtered.map((p) => {
+            const active = p.id === selectedId;
+            const projectRepos = repositories.filter((r) => r.projectId === p.id);
+            const projectTeams = teams.filter((t) => t.projectIds.includes(p.id));
+            const repoCount = projectRepos.length;
+            const teamCount = projectTeams.length;
+            return (
             <article
               key={p.id}
               onClick={() => !active && setSelectedId(p.id)}
               className={cn(
-                "section-card text-left group relative overflow-hidden transition-base",
-                active ? "p-0 ring-2 ring-primary shadow-soft" : "p-5 cursor-pointer",
+                "section-card text-left group relative overflow-hidden transition-all duration-300",
+                active ? "p-0 ring-2 ring-primary shadow-soft col-span-full" : "p-5 cursor-pointer",
               )}
             >
                 <div
@@ -318,19 +318,10 @@ const Projects = () => {
                   </div>
                 )}
               </article>
-          );
-        };
-        return (
-          <div className="space-y-4">
-            {activeProject && renderCard(activeProject, true)}
-            {others.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {others.map((p) => renderCard(p, false))}
-              </div>
-            )}
-          </div>
-        );
-      })()}
+            );
+          })}
+        </div>
+      )}
 
       <ProjectDialog
         open={dialogOpen}
