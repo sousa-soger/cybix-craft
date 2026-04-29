@@ -319,7 +319,6 @@ const Projects = () => {
                 )}
               </article>
             );
-            );
           })}
         </div>
       )}
