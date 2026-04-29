@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import {
   Plus,
   FolderKanban,
@@ -147,14 +147,21 @@ const Projects = () => {
             const repoCount = projectRepos.length;
             const teamCount = projectTeams.length;
             return (
-            <article
-              key={p.id}
-              onClick={() => !active && setSelectedId(p.id)}
-              className={cn(
-                "section-card text-left group relative overflow-hidden transition-all duration-300",
-                active ? "p-0 ring-2 ring-primary shadow-soft col-span-full" : "p-5 cursor-pointer",
+            <Fragment key={p.id}>
+              {active && (
+                <div
+                  aria-hidden
+                  className="invisible pointer-events-none"
+                  // Reserves the original grid slot so siblings don't reflow
+                />
               )}
-            >
+              <article
+                onClick={() => !active && setSelectedId(p.id)}
+                className={cn(
+                  "section-card text-left group relative overflow-hidden transition-all duration-300",
+                  active ? "p-0 ring-2 ring-primary shadow-soft col-span-full order-[var(--order)]" : "p-5 cursor-pointer",
+                )}
+              >
                 <div
                   className={cn(
                     "absolute -top-12 -right-12 h-32 w-32 rounded-full bg-gradient-to-br opacity-20 blur-2xl pointer-events-none",
