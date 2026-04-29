@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Plus,
   FolderKanban,
@@ -147,39 +147,41 @@ const Projects = () => {
             const teamCount = projectTeams.length;
             const active = selectedId === p.id;
             return (
-              <Fragment key={p.id}>
-                <button
-                  onClick={() => setSelectedId(active ? null : p.id)}
+              <article
+                key={p.id}
+                onClick={() => !active && setSelectedId(p.id)}
+                className={cn(
+                  "section-card text-left group relative overflow-hidden transition-base",
+                  active ? "col-span-full p-0 ring-2 ring-primary shadow-soft" : "p-5 cursor-pointer",
+                )}
+              >
+                <div
                   className={cn(
-                    "section-card p-5 text-left group cursor-pointer relative overflow-hidden transition-base",
-                    active && "ring-2 ring-primary shadow-soft",
+                    "absolute -top-12 -right-12 h-32 w-32 rounded-full bg-gradient-to-br opacity-20 blur-2xl pointer-events-none",
+                    p.color,
                   )}
-                >
-                  <div
-                    className={cn(
-                      "absolute -top-12 -right-12 h-32 w-32 rounded-full bg-gradient-to-br opacity-20 blur-2xl pointer-events-none",
-                      p.color,
-                    )}
-                  />
-                  <div className="flex items-start justify-between gap-3 mb-3 relative">
+                />
+
+                {/* Compact header (always visible) */}
+                <div className={cn("relative", active && "p-5 border-b border-border/60 brand-soft-bg")}>
+                  <div className="flex items-start justify-between gap-3 mb-3">
                     <div
                       className={cn(
-                        "h-10 w-10 rounded-lg bg-gradient-to-br shadow-soft flex items-center justify-center",
+                        "rounded-lg bg-gradient-to-br shadow-soft flex items-center justify-center shrink-0",
                         p.color,
+                        active ? "h-12 w-12" : "h-10 w-10",
                       )}
                     >
-                      <FolderKanban className="h-4 w-4 on-brand" />
+                      <FolderKanban className={cn("on-brand", active ? "h-5 w-5" : "h-4 w-4")} />
                     </div>
                     <div
-                      className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-base"
+                      className={cn(
+                        "flex items-center gap-1 transition-base",
+                        active ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+                      )}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => openEdit(p)}
-                      >
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(p)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
                       <Button
@@ -190,13 +192,28 @@ const Projects = () => {
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
+                      {active && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => setSelectedId(null)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
-                  <div className="text-sm font-semibold relative">{p.name}</div>
-                  <div className="text-xs text-muted-foreground mt-1 line-clamp-2 relative min-h-[32px]">
+                  <div className={cn("font-semibold", active ? "text-base" : "text-sm")}>{p.name}</div>
+                  <div
+                    className={cn(
+                      "text-xs text-muted-foreground mt-1",
+                      !active && "line-clamp-2 min-h-[32px]",
+                    )}
+                  >
                     {p.description || "No description."}
                   </div>
-                  <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground relative">
+                  <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
                       <GitBranch className="h-3 w-3" /> {repoCount} repos
                     </span>
@@ -205,132 +222,102 @@ const Projects = () => {
                     </span>
                     <span className="ml-auto">{p.lastDeployedAt}</span>
                   </div>
-                </button>
+                </div>
 
+                {/* Expanded details */}
                 {active && (
-                  <section className="col-span-full section-card p-0 overflow-hidden animate-accordion-down">
-                    <header className="flex items-start justify-between gap-4 p-5 border-b border-border/60 brand-soft-bg">
-                      <div className="flex items-start gap-3 min-w-0">
-                        <div
-                          className={cn(
-                            "h-12 w-12 rounded-xl bg-gradient-to-br shadow-soft flex items-center justify-center shrink-0",
-                            p.color,
-                          )}
-                        >
-                          <FolderKanban className="h-5 w-5 on-brand" />
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="text-base font-semibold truncate">{p.name}</h3>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {p.description || "No description."}
-                          </p>
-                        </div>
+                  <div
+                    className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border/60 animate-accordion-down"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Repositories */}
+                    <div className="p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-semibold inline-flex items-center gap-2">
+                          <GitBranch className="h-4 w-4 text-primary" /> Connected repositories
+                        </h4>
+                        <span className="text-[11px] text-muted-foreground">{projectRepos.length}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => openEdit(p)}>
-                          <Pencil className="h-3.5 w-3.5" /> Edit
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => setSelectedId(null)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </header>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border/60">
-                      {/* Repositories */}
-                      <div className="p-5">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="text-sm font-semibold inline-flex items-center gap-2">
-                            <GitBranch className="h-4 w-4 text-primary" /> Connected repositories
-                          </h4>
-                          <span className="text-[11px] text-muted-foreground">{projectRepos.length}</span>
-                        </div>
-                        {projectRepos.length === 0 ? (
-                          <p className="text-xs text-muted-foreground py-6 text-center">
-                            No repositories connected to this project yet.
-                          </p>
-                        ) : (
-                          <ul className="space-y-2">
-                            {projectRepos.map((r) => (
-                              <li
-                                key={r.id}
-                                className="flex items-center gap-3 rounded-lg border border-border/60 p-3 hover:shadow-soft transition-base"
+                      {projectRepos.length === 0 ? (
+                        <p className="text-xs text-muted-foreground py-6 text-center">
+                          No repositories connected to this project yet.
+                        </p>
+                      ) : (
+                        <ul className="space-y-2">
+                          {projectRepos.map((r) => (
+                            <li
+                              key={r.id}
+                              className="flex items-center gap-3 rounded-lg border border-border/60 p-3 hover:shadow-soft transition-base"
+                            >
+                              <div className="h-8 w-8 rounded-md brand-soft-bg flex items-center justify-center text-primary shrink-0">
+                                {providerIcon(r.provider)}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs font-semibold font-mono truncate">{r.name}</div>
+                                <div className="text-[11px] text-muted-foreground">
+                                  {r.branches.length} branches · {r.tags.length} tags · default {r.defaultBranch}
+                                </div>
+                              </div>
+                              <span
+                                className={cn(
+                                  "text-[10px] font-medium px-2 py-0.5 rounded-md border",
+                                  r.status === "connected" && "bg-success/10 text-success border-success/30",
+                                  r.status === "expired" && "bg-queued/10 text-queued border-queued/30",
+                                  r.status === "needs-auth" && "bg-failed/10 text-failed border-failed/30",
+                                )}
                               >
-                                <div className="h-8 w-8 rounded-md brand-soft-bg flex items-center justify-center text-primary shrink-0">
-                                  {providerIcon(r.provider)}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="text-xs font-semibold font-mono truncate">{r.name}</div>
-                                  <div className="text-[11px] text-muted-foreground">
-                                    {r.branches.length} branches · {r.tags.length} tags · default {r.defaultBranch}
-                                  </div>
-                                </div>
-                                <span
-                                  className={cn(
-                                    "text-[10px] font-medium px-2 py-0.5 rounded-md border",
-                                    r.status === "connected" && "bg-success/10 text-success border-success/30",
-                                    r.status === "expired" && "bg-queued/10 text-queued border-queued/30",
-                                    r.status === "needs-auth" && "bg-failed/10 text-failed border-failed/30",
-                                  )}
-                                >
-                                  {r.status === "connected" ? "Connected" : r.status === "expired" ? "Expired" : "Needs auth"}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-
-                      {/* Teams */}
-                      <div className="p-5">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="text-sm font-semibold inline-flex items-center gap-2">
-                            <Users className="h-4 w-4 text-primary" /> Teams involved
-                          </h4>
-                          <span className="text-[11px] text-muted-foreground">{projectTeams.length}</span>
-                        </div>
-                        {projectTeams.length === 0 ? (
-                          <p className="text-xs text-muted-foreground py-6 text-center">
-                            No teams have been assigned to this project.
-                          </p>
-                        ) : (
-                          <ul className="space-y-2">
-                            {projectTeams.map((t) => (
-                              <li
-                                key={t.id}
-                                className="flex items-center gap-3 rounded-lg border border-border/60 p-3 hover:shadow-soft transition-base"
-                              >
-                                <div
-                                  className={cn(
-                                    "h-9 w-9 rounded-lg bg-gradient-to-br shadow-soft flex items-center justify-center text-[11px] font-semibold on-brand shrink-0",
-                                    t.avatarColor,
-                                  )}
-                                >
-                                  {t.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="text-xs font-semibold truncate">{t.name}</div>
-                                  <div className="text-[11px] text-muted-foreground">
-                                    {t.members.length} members · {t.projectIds.length} projects
-                                  </div>
-                                </div>
-                                <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
-                                  <Rocket className="h-3 w-3" /> active
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
+                                {r.status === "connected" ? "Connected" : r.status === "expired" ? "Expired" : "Needs auth"}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
-                  </section>
+
+                    {/* Teams */}
+                    <div className="p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-semibold inline-flex items-center gap-2">
+                          <Users className="h-4 w-4 text-primary" /> Teams involved
+                        </h4>
+                        <span className="text-[11px] text-muted-foreground">{projectTeams.length}</span>
+                      </div>
+                      {projectTeams.length === 0 ? (
+                        <p className="text-xs text-muted-foreground py-6 text-center">
+                          No teams have been assigned to this project.
+                        </p>
+                      ) : (
+                        <ul className="space-y-2">
+                          {projectTeams.map((t) => (
+                            <li
+                              key={t.id}
+                              className="flex items-center gap-3 rounded-lg border border-border/60 p-3 hover:shadow-soft transition-base"
+                            >
+                              <div
+                                className={cn(
+                                  "h-9 w-9 rounded-lg bg-gradient-to-br shadow-soft flex items-center justify-center text-[11px] font-semibold on-brand shrink-0",
+                                  t.avatarColor,
+                                )}
+                              >
+                                {t.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs font-semibold truncate">{t.name}</div>
+                                <div className="text-[11px] text-muted-foreground">
+                                  {t.members.length} members · {t.projectIds.length} projects
+                                </div>
+                              </div>
+                              <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+                                <Rocket className="h-3 w-3" /> active
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
                 )}
-              </Fragment>
+              </article>
             );
           })}
         </div>
