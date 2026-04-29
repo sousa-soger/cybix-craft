@@ -63,9 +63,6 @@ const Projects = () => {
     );
   }, [list, query]);
 
-  const selected = selectedId ? list.find((p) => p.id === selectedId) : null;
-  const selectedRepos = selected ? repositories.filter((r) => r.projectId === selected.id) : [];
-  const selectedTeams = selected ? teams.filter((t) => t.projectIds.includes(selected.id)) : [];
 
   const openCreate = () => {
     setEditing(null);
@@ -150,7 +147,7 @@ const Projects = () => {
             const teamCount = projectTeams.length;
             const active = selectedId === p.id;
             return (
-              <FragmentRow key={p.id}>
+              <Fragment key={p.id}>
                 <button
                   onClick={() => setSelectedId(active ? null : p.id)}
                   className={cn(
@@ -333,7 +330,7 @@ const Projects = () => {
                     </div>
                   </section>
                 )}
-              </FragmentRow>
+              </Fragment>
             );
           })}
         </div>
