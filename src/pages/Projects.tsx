@@ -137,24 +137,24 @@ const Projects = () => {
         </div>
       )}
 
-      {/* Grid (with inline accordion expand) */}
-      {filtered.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map((p) => {
-            const projectRepos = repositories.filter((r) => r.projectId === p.id);
-            const projectTeams = teams.filter((t) => t.projectIds.includes(p.id));
-            const repoCount = projectRepos.length;
-            const teamCount = projectTeams.length;
-            const active = selectedId === p.id;
-            return (
-              <article
-                key={p.id}
-                onClick={() => !active && setSelectedId(p.id)}
-                className={cn(
-                  "section-card text-left group relative overflow-hidden transition-base",
-                  active ? "col-span-full p-0 ring-2 ring-primary shadow-soft" : "p-5 cursor-pointer",
-                )}
-              >
+      {/* Grid (active card pulled out to its own full-width row above) */}
+      {filtered.length > 0 && (() => {
+        const activeProject = filtered.find((p) => p.id === selectedId) ?? null;
+        const others = activeProject ? filtered.filter((p) => p.id !== activeProject.id) : filtered;
+        const renderCard = (p: Project, active: boolean) => {
+          const projectRepos = repositories.filter((r) => r.projectId === p.id);
+          const projectTeams = teams.filter((t) => t.projectIds.includes(p.id));
+          const repoCount = projectRepos.length;
+          const teamCount = projectTeams.length;
+          return (
+            <article
+              key={p.id}
+              onClick={() => !active && setSelectedId(p.id)}
+              className={cn(
+                "section-card text-left group relative overflow-hidden transition-base",
+                active ? "p-0 ring-2 ring-primary shadow-soft" : "p-5 cursor-pointer",
+              )}
+            >
                 <div
                   className={cn(
                     "absolute -top-12 -right-12 h-32 w-32 rounded-full bg-gradient-to-br opacity-20 blur-2xl pointer-events-none",
