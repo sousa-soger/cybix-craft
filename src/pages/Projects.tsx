@@ -159,7 +159,7 @@ const Projects = () => {
                 onClick={() => !active && setSelectedId(p.id)}
                 className={cn(
                   "section-card text-left group relative overflow-hidden transition-all duration-300",
-                  active ? "p-0 ring-2 ring-primary shadow-soft col-span-full order-[var(--order)]" : "p-5 cursor-pointer",
+                  active ? "p-0 ring-2 ring-primary shadow-soft col-span-full" : "p-5 cursor-pointer",
                 )}
               >
                 <div
@@ -325,6 +325,7 @@ const Projects = () => {
                   </div>
                 )}
               </article>
+            </Fragment>
             );
           })}
         </div>
