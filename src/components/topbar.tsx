@@ -1,4 +1,4 @@
-import { Bell, Github, GitlabIcon as Gitlab, Link2, Link2Off, Moon, Search, Settings as SettingsIcon, Sun, User } from "lucide-react";
+import { Bell, Github, GitlabIcon as Gitlab, Link2, Link2Off, LogOut, Moon, Search, Settings as SettingsIcon, Sun, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,6 +128,18 @@ export const Topbar = ({ title, subtitle, actions }: TopbarProps) => {
               <Link to="/settings">
                 <SettingsIcon className="h-4 w-4" /> Settings
               </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => {
+                disconnectOAuth("github");
+                disconnectOAuth("gitlab");
+                toast({ title: "Logged out" });
+                navigate("/");
+              }}
+              className="text-failed focus:text-failed"
+            >
+              <LogOut className="h-4 w-4" /> Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
