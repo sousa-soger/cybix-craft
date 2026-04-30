@@ -68,12 +68,7 @@ export const profileStore = {
 
 export function useProfile() {
   const [snapshot, setSnapshot] = useState(profileStore.get());
-  useEffect(() => {
-    const unsub = profileStore.subscribe(() => setSnapshot({ ...profileStore.get() }));
-    return () => {
-      unsub;
-    };
-  }, []);
+  useEffect(() => profileStore.subscribe(() => setSnapshot({ ...profileStore.get() })), []);
   return snapshot;
 }
 
