@@ -60,7 +60,9 @@ export const profileStore = {
   },
   subscribe: (l: () => void) => {
     listeners.add(l);
-    return () => listeners.delete(l);
+    return () => {
+      listeners.delete(l);
+    };
   },
 };
 
