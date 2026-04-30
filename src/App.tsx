@@ -14,6 +14,7 @@ import Servers from "./pages/Servers.tsx";
 import Team from "./pages/Team.tsx";
 import Audit from "./pages/Audit.tsx";
 import Settings from "./pages/Settings.tsx";
+import Profile from "./pages/Profile.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/team" element={<Team />} />
             <Route path="/audit" element={<Audit />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
