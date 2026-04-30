@@ -1,8 +1,19 @@
-import { Bell, Moon, Search, Sun } from "lucide-react";
+import { Bell, Github, GitlabIcon as Gitlab, Link2, Link2Off, Moon, Search, Settings as SettingsIcon, Sun, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/components/theme-provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { connectOAuth, disconnectOAuth, useProfile } from "@/lib/profile-store";
+import { toast } from "@/hooks/use-toast";
 
 interface TopbarProps {
   title?: string;
@@ -12,6 +23,18 @@ interface TopbarProps {
 
 export const Topbar = ({ title, subtitle, actions }: TopbarProps) => {
   const { theme, toggle } = useTheme();
+  const profile = useProfile();
+  const navigate = useNavigate();
+
+  const toggleProvider = (provider: "github" | "gitlab") => {
+    if (profile[provider].connected) {
+      disconnectOAuth(provider);
+      toast({ title: `${provider === "github" ? "GitHub" : "GitLab"} disconnected` });
+    } else {
+      connectOAuth(provider);
+      toast({ title: `${provider === "github" ? "GitHub" : "GitLab"} connected` });
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/70 bg-background/70 backdrop-blur-xl">
@@ -46,11 +69,68 @@ export const Topbar = ({ title, subtitle, actions }: TopbarProps) => {
           <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-failed" />
         </Button>
 
-        <Avatar className="h-9 w-9 ring-2 ring-border">
-          <AvatarFallback className="brand-gradient-bg text-[hsl(var(--on-brand))] text-xs font-semibold">
-            DA
-          </AvatarFallback>
-        </Avatar>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              aria-label="Open profile menu"
+              className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <Avatar className="h-9 w-9 ring-2 ring-border cursor-pointer hover:ring-primary/60 transition-colors">
+                <AvatarFallback className="brand-gradient-bg text-[hsl(var(--on-brand))] text-xs font-semibold">
+                  {profile.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuLabel>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold">{profile.name}</span>
+                <span className="text-xs text-muted-foreground font-normal">{profile.email}</span>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate("/profile")}>
+              <User className="h-4 w-4" /> View profile
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Quick connect
+            </DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => toggleProvider("github")}>
+              <Github className="h-4 w-4" />
+              <span className="flex-1">GitHub</span>
+              {profile.github.connected ? (
+                <span className="inline-flex items-center gap-1 text-[11px] text-success">
+                  <Link2Off className="h-3 w-3" /> Disconnect
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <Link2 className="h-3 w-3" /> Connect
+                </span>
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => toggleProvider("gitlab")}>
+              <Gitlab className="h-4 w-4" />
+              <span className="flex-1">GitLab</span>
+              {profile.gitlab.connected ? (
+                <span className="inline-flex items-center gap-1 text-[11px] text-success">
+                  <Link2Off className="h-3 w-3" /> Disconnect
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <Link2 className="h-3 w-3" /> Connect
+                </span>
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link to="/settings">
+                <SettingsIcon className="h-4 w-4" /> Settings
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
