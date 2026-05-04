@@ -44,6 +44,7 @@ import {
   type RepoProvider,
 } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
+import { enqueueJob } from "@/lib/package-queue";
 
 const providerIcon = (p: RepoProvider) => {
   switch (p) {
