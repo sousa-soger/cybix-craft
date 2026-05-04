@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { connectOAuth, disconnectOAuth, useProfile } from "@/lib/profile-store";
 import { toast } from "@/hooks/use-toast";
+import { QueueIndicator } from "@/components/queue-indicator";
 
 interface TopbarProps {
   title?: string;
@@ -59,6 +60,8 @@ export const Topbar = ({ title, subtitle, actions }: TopbarProps) => {
         </div>
 
         {actions}
+
+        <QueueIndicator />
 
         <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}

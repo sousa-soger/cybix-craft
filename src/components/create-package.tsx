@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Download,
   FileDiff,
   FileMinus,
   FilePlus2,
@@ -12,13 +11,10 @@ import {
   Github,
   GitlabIcon as Gitlab,
   HardDrive,
-  Loader2,
   Package as PackageIcon,
-  Rocket,
   Server as ServerIcon,
   ShieldAlert,
   Sparkles,
-  X,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,7 +28,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { EnvBadge } from "@/components/badges";
 import { cn } from "@/lib/utils";
@@ -44,6 +39,7 @@ import {
   type RepoProvider,
 } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
+import { enqueueJob } from "@/lib/package-queue";
 
 const providerIcon = (p: RepoProvider) => {
   switch (p) {
@@ -64,21 +60,6 @@ const providerLabel: Record<RepoProvider, string> = {
   "company-server": "Company server",
   "local-pc": "Local PC",
 };
-
-interface ProgressStage {
-  key: string;
-  label: string;
-}
-const STAGES: ProgressStage[] = [
-  { key: "queued", label: "Queued" },
-  { key: "downloading", label: "Downloading" },
-  { key: "extracting", label: "Extracting" },
-  { key: "comparing", label: "Comparing" },
-  { key: "generating", label: "Generating packages" },
-  { key: "compressing", label: "Compressing" },
-];
-
-type Phase = "form" | "progress" | "done";
 
 export const CreatePackage = () => {
   const { toast } = useToast();
@@ -130,163 +111,33 @@ export const CreatePackage = () => {
 
   const finalName = customName.trim() || autoName;
 
-  // Progress simulation
-  const [phase, setPhase] = useState<Phase>("form");
-  const [stageIdx, setStageIdx] = useState(0);
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    if (phase !== "progress") return;
-    const id = setInterval(() => {
-      setProgress((p) => {
-        const next = p + 2 + Math.random() * 4;
-        if (next >= 100) {
-          clearInterval(id);
-          setStageIdx(STAGES.length - 1);
-          setTimeout(() => setPhase("done"), 400);
-          return 100;
-        }
-        const idx = Math.min(STAGES.length - 1, Math.floor((next / 100) * STAGES.length));
-        setStageIdx(idx);
-        return next;
-      });
-    }, 220);
-    return () => clearInterval(id);
-  }, [phase]);
-
   const canSubmit =
     !!repo && !!baseVersion && !!targetVersion && !identical && (environment !== "PROD" || confirmedProd);
 
   const handleGenerate = () => {
-    if (!canSubmit) return;
-    setPhase("progress");
-    setStageIdx(0);
-    setProgress(0);
-  };
-
-  const handleCancel = () => {
-    setPhase("form");
-    setProgress(0);
-    setStageIdx(0);
-    toast({ title: "Cancelled", description: "Package generation was cancelled." });
-  };
-
-  const reset = () => {
-    setPhase("form");
-    setProgress(0);
-    setStageIdx(0);
+    if (!canSubmit || !repo) return;
+    const project = projects.find((p) => p.id === projectId);
+    enqueueJob({
+      name: finalName,
+      projectId,
+      projectName: project?.name ?? "",
+      repoId: repo.id,
+      repoName: repo.name,
+      environment,
+      baseVersion,
+      targetVersion,
+      generateRollback,
+      outputFormat,
+    });
+    toast({
+      title: "Added to queue",
+      description: `${finalName} — you can keep working while it builds.`,
+    });
+    setCustomName("");
     setConfirmedProd(false);
   };
 
-  // ============= PROGRESS PHASE =============
-  if (phase === "progress") {
-    return (
-      <div className="max-w-3xl mx-auto">
-        <div className="section-card p-8 shadow-soft">
-          <div className="flex items-start justify-between gap-4 mb-6">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                <span className="text-sm font-semibold text-primary">Generating package</span>
-              </div>
-              <h2 className="text-xl font-semibold tracking-tight">{finalName}</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                {repo?.name} · <EnvBadge env={environment} className="ml-1" />
-              </p>
-            </div>
-            <Button variant="ghost" size="sm" onClick={handleCancel}>
-              <X className="h-4 w-4" /> Cancel
-            </Button>
-          </div>
-
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-2 text-sm">
-              <span className="font-medium">{STAGES[stageIdx].label}…</span>
-              <span className="tabular-nums text-muted-foreground">{Math.floor(progress)}%</span>
-            </div>
-            <Progress value={progress} className="h-2" />
-          </div>
-
-          <ol className="space-y-2.5">
-            {STAGES.map((s, i) => {
-              const done = i < stageIdx;
-              const active = i === stageIdx;
-              return (
-                <li key={s.key} className="flex items-center gap-3 text-sm">
-                  <span
-                    className={cn(
-                      "flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-semibold transition-base",
-                      done && "bg-success text-success-foreground border-success",
-                      active && "brand-gradient-bg text-[hsl(var(--on-brand))] border-transparent shadow-glow",
-                      !done && !active && "border-border text-muted-foreground",
-                    )}
-                  >
-                    {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
-                  </span>
-                  <span
-                    className={cn(
-                      "transition-base",
-                      active && "font-medium",
-                      !done && !active && "text-muted-foreground",
-                    )}
-                  >
-                    {s.label}
-                  </span>
-                  {active && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary ml-1" />}
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      </div>
-    );
-  }
-
-  // ============= DONE PHASE =============
-  if (phase === "done") {
-    return (
-      <div className="max-w-3xl mx-auto animate-fade-in">
-        <div className="section-card p-8 text-center shadow-soft">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl brand-gradient-bg shadow-glow">
-            <CheckCircle2 className="h-8 w-8 text-white" />
-          </div>
-          <h2 className="text-2xl font-semibold tracking-tight">Package ready</h2>
-          <p className="text-sm text-muted-foreground mt-2 break-all">{finalName}</p>
-
-          <div className="grid grid-cols-3 gap-3 mt-6">
-            <div className="rounded-xl bg-secondary/50 p-4">
-              <div className="text-2xl font-semibold">{changeset?.estimatedSizeMB ?? "—"}<span className="text-sm font-normal text-muted-foreground"> MB</span></div>
-              <div className="text-xs text-muted-foreground mt-1">Package size</div>
-            </div>
-            <div className="rounded-xl bg-secondary/50 p-4">
-              <div className="text-2xl font-semibold">
-                {(changeset?.added.length ?? 0) + (changeset?.modified.length ?? 0) + (changeset?.deleted.length ?? 0)}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">Files changed</div>
-            </div>
-            <div className="rounded-xl bg-secondary/50 p-4">
-              <div className="text-2xl font-semibold">{generateRollback ? "Yes" : "No"}</div>
-              <div className="text-xs text-muted-foreground mt-1">Rollback</div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 mt-7 justify-center">
-            <Button variant="brand" size="lg">
-              <Rocket className="h-4 w-4" /> Deploy Package
-            </Button>
-            <Button variant="outline" size="lg">
-              <Download className="h-4 w-4" /> Download
-            </Button>
-            <Button variant="ghost" size="lg" onClick={reset}>
-              View Details
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ============= FORM PHASE =============
+  // ============= FORM =============
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
       {/* LEFT: Sections */}
