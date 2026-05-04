@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Download,
   FileDiff,
   FileMinus,
   FilePlus2,
@@ -12,13 +11,10 @@ import {
   Github,
   GitlabIcon as Gitlab,
   HardDrive,
-  Loader2,
   Package as PackageIcon,
-  Rocket,
   Server as ServerIcon,
   ShieldAlert,
   Sparkles,
-  X,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,7 +28,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { EnvBadge } from "@/components/badges";
 import { cn } from "@/lib/utils";
@@ -65,21 +60,6 @@ const providerLabel: Record<RepoProvider, string> = {
   "company-server": "Company server",
   "local-pc": "Local PC",
 };
-
-interface ProgressStage {
-  key: string;
-  label: string;
-}
-const STAGES: ProgressStage[] = [
-  { key: "queued", label: "Queued" },
-  { key: "downloading", label: "Downloading" },
-  { key: "extracting", label: "Extracting" },
-  { key: "comparing", label: "Comparing" },
-  { key: "generating", label: "Generating packages" },
-  { key: "compressing", label: "Compressing" },
-];
-
-type Phase = "form" | "progress" | "done";
 
 export const CreatePackage = () => {
   const { toast } = useToast();
