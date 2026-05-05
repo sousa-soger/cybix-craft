@@ -31,6 +31,7 @@ import {
   projects as initialProjects,
   repositories,
   teams,
+  CURRENT_USER_ID,
   type Project,
   type RepoProvider,
 } from "@/lib/mock-data";
@@ -83,7 +84,7 @@ const Projects = () => {
       const id = `p-${Date.now()}`;
       setList((prev) => [
         ...prev,
-        { id, ...data, repoCount: 0, lastDeployedAt: "—" },
+        { id, ...data, repoCount: 0, lastDeployedAt: "—", ownerId: CURRENT_USER_ID, members: [] },
       ]);
       toast.success("Project created", { description: data.name });
     }
