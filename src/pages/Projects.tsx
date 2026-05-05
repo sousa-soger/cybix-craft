@@ -291,7 +291,7 @@ const Projects = () => {
                 {/* Expanded details */}
                 {active && (
                   <div
-                    className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border/60 animate-accordion-down"
+                    className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-border/60 animate-accordion-down"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {/* Repositories */}
