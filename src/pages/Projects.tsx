@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Plus,
   FolderKanban,
@@ -13,10 +14,13 @@ import {
   Search,
   X,
   Rocket,
+  Crown,
+  ShieldCheck,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,10 +36,14 @@ import {
   repositories,
   teams,
   CURRENT_USER_ID,
+  ROLE_META,
+  findUser,
+  projectAccessList,
   type Project,
   type RepoProvider,
 } from "@/lib/mock-data";
 import { ProjectDialog } from "@/components/project-dialog";
+import { RepositoriesAdminView } from "@/components/repositories-admin-view";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
