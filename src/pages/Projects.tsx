@@ -379,6 +379,48 @@ const Projects = () => {
                         </ul>
                       )}
                     </div>
+
+                    {/* People (effective access) */}
+                    <div className="p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-semibold inline-flex items-center gap-2">
+                          <ShieldCheck className="h-4 w-4 text-primary" /> People & roles
+                        </h4>
+                        <span className="text-[11px] text-muted-foreground">{projectAccessList(p).length}</span>
+                      </div>
+                      <ul className="space-y-2">
+                        {projectAccessList(p).map((entry) => {
+                          const u = findUser(entry.userId);
+                          if (!u) return null;
+                          const meta = ROLE_META[entry.role];
+                          return (
+                            <li
+                              key={entry.userId}
+                              className="flex items-center gap-3 rounded-lg border border-border/60 p-2.5 hover:shadow-soft transition-base"
+                            >
+                              <Avatar className="h-8 w-8 shrink-0">
+                                <AvatarFallback className="brand-gradient-bg text-[hsl(var(--on-brand))] text-[10px] font-semibold">
+                                  {u.initials}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs font-semibold truncate flex items-center gap-1">
+                                  {u.name}
+                                  {entry.source === "owner" && <Crown className="h-3 w-3 text-primary" />}
+                                </div>
+                                <div className="text-[10px] text-muted-foreground truncate">
+                                  {entry.source === "team" ? "via team" : entry.source === "project" ? "project override" : "owner"}
+                                </div>
+                              </div>
+                              <span className="text-[10px] font-medium px-2 py-0.5 rounded-md border border-border/60 inline-flex items-center gap-1.5 whitespace-nowrap">
+                                <span className={cn("h-2 w-2 rounded-full bg-gradient-to-br", meta.color)} />
+                                {meta.label}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
                   </div>
                 )}
               </article>
