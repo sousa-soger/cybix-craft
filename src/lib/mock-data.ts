@@ -89,6 +89,13 @@ export const projects: Project[] = [
     color: "from-brand-rose to-brand-iris",
     repoCount: 4,
     lastDeployedAt: "2h ago",
+    ownerId: "m1",
+    teamId: "t2",
+    members: [
+      { userId: "m2", role: "maintainer" },
+      { userId: "m6", role: "maintainer" },
+      { userId: "m7", role: "creator" },
+    ],
   },
   {
     id: "p2",
@@ -97,6 +104,13 @@ export const projects: Project[] = [
     color: "from-brand-teal to-brand-iris",
     repoCount: 6,
     lastDeployedAt: "Yesterday",
+    ownerId: "m1",
+    teamId: "t1",
+    members: [
+      { userId: "m2", role: "maintainer" },
+      { userId: "m3", role: "creator" },
+      { userId: "m4", role: "deployer" },
+    ],
   },
   {
     id: "p3",
@@ -105,6 +119,12 @@ export const projects: Project[] = [
     color: "from-brand-iris to-brand-teal",
     repoCount: 2,
     lastDeployedAt: "3d ago",
+    ownerId: "m6",
+    teamId: "t2",
+    members: [
+      { userId: "m7", role: "creator" },
+      { userId: "m8", role: "deployer" },
+    ],
   },
   {
     id: "p4",
@@ -113,6 +133,12 @@ export const projects: Project[] = [
     color: "from-brand-rose to-brand-teal",
     repoCount: 3,
     lastDeployedAt: "1w ago",
+    ownerId: "m2",
+    teamId: "t1",
+    members: [
+      { userId: "m3", role: "creator" },
+      { userId: "m5", role: "viewer" },
+    ],
   },
 ];
 
@@ -126,6 +152,9 @@ export const repositories: Repository[] = [
     branches: ["main", "develop", "release/4.2", "feature/checkout-v2"],
     tags: ["v4.2.0", "v4.1.3", "v4.1.2", "v4.1.1", "v4.0.0"],
     status: "connected",
+    authMethod: "oauth",
+    credentialId: "cred-gh-1",
+    lastVerifiedAt: "2h ago",
   },
   {
     id: "r2",
@@ -136,6 +165,9 @@ export const repositories: Repository[] = [
     branches: ["main", "staging"],
     tags: ["v2.7.0", "v2.6.4"],
     status: "connected",
+    authMethod: "pat",
+    credentialId: "cred-gl-1",
+    lastVerifiedAt: "1d ago",
   },
   {
     id: "r3",
@@ -146,6 +178,9 @@ export const repositories: Repository[] = [
     branches: ["main", "develop", "hotfix/auth"],
     tags: ["v8.1.0", "v8.0.2", "v8.0.1"],
     status: "connected",
+    authMethod: "oauth",
+    credentialId: "cred-gh-1",
+    lastVerifiedAt: "3h ago",
   },
   {
     id: "r4",
@@ -156,6 +191,9 @@ export const repositories: Repository[] = [
     branches: ["main", "develop"],
     tags: ["v3.4.0", "v3.3.1"],
     status: "connected",
+    authMethod: "ssh",
+    credentialId: "cred-ssh-1",
+    lastVerifiedAt: "5d ago",
   },
   {
     id: "r5",
@@ -166,6 +204,8 @@ export const repositories: Repository[] = [
     branches: ["main", "release/ios-7", "release/android-7"],
     tags: ["v7.0.0", "v6.9.2"],
     status: "needs-auth",
+    authMethod: "pat",
+    lastVerifiedAt: "—",
   },
   {
     id: "r6",
@@ -176,8 +216,11 @@ export const repositories: Repository[] = [
     branches: ["main"],
     tags: ["v1.2.0"],
     status: "expired",
+    authMethod: "userpass",
+    lastVerifiedAt: "12d ago",
   },
 ];
+
 
 export const packages: PackageItem[] = [
   {
