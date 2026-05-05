@@ -269,13 +269,21 @@ const Projects = () => {
                   >
                     {p.description || "No description."}
                   </div>
-                  <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground">
+                  <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
                     <span className="inline-flex items-center gap-1">
                       <GitBranch className="h-3 w-3" /> {repoCount} repos
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <Users className="h-3 w-3" /> {teamCount} teams
                     </span>
+                    {(() => {
+                      const owner = findUser(p.ownerId);
+                      return owner ? (
+                        <span className="inline-flex items-center gap-1">
+                          <Crown className="h-3 w-3 text-primary" /> {owner.name}
+                        </span>
+                      ) : null;
+                    })()}
                     <span className="ml-auto">{p.lastDeployedAt}</span>
                   </div>
                 </div>
