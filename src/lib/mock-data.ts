@@ -3,6 +3,15 @@ export type Environment = "DEV" | "QA" | "PROD";
 export type PackageStatus = "queued" | "running" | "success" | "failed" | "cancelled";
 export type DeploymentStatus = "queued" | "running" | "success" | "failed" | "cancelled";
 
+export type RepoAuthMethod = "oauth" | "pat" | "ssh" | "userpass";
+
+export interface ProjectMember {
+  /** userId - matches TeamMember.id when invited via a team, or freeform user id otherwise */
+  userId: string;
+  /** Per-project role override. If absent, the team default role applies. */
+  role: TeamRole;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -10,6 +19,12 @@ export interface Project {
   color: string;
   repoCount: number;
   lastDeployedAt: string;
+  /** Owner user id (full control over the project, regardless of team role). */
+  ownerId: string;
+  /** Optional team this project belongs to. Members of the team inherit access. */
+  teamId?: string;
+  /** Per-project role overrides (or extra individual collaborators). */
+  members: ProjectMember[];
 }
 
 export interface Repository {
@@ -21,6 +36,9 @@ export interface Repository {
   branches: string[];
   tags: string[];
   status: "connected" | "expired" | "needs-auth";
+  authMethod: RepoAuthMethod;
+  credentialId?: string;
+  lastVerifiedAt: string;
 }
 
 export interface PackageItem {
