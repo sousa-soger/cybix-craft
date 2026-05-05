@@ -404,6 +404,8 @@ export interface Team {
   avatarColor: string;
   members: TeamMember[];
   projectIds: string[];
+  /** Default role used when mass-inviting people to this team. */
+  defaultRole: TeamRole;
 }
 
 export const teams: Team[] = [
@@ -413,6 +415,7 @@ export const teams: Team[] = [
     slug: "cybix-core",
     avatarColor: "from-brand-rose to-brand-iris",
     projectIds: ["p1", "p2", "p4"],
+    defaultRole: "creator",
     members: [
       { id: "m1", name: "Demir A.", email: "demir@cybix.io", initials: "DA", role: "owner", status: "active", joinedAt: "Jan 2024" },
       { id: "m2", name: "Selin K.", email: "selin@cybix.io", initials: "SK", role: "maintainer", status: "active", joinedAt: "Feb 2024" },
@@ -427,6 +430,7 @@ export const teams: Team[] = [
     slug: "atlas-squad",
     avatarColor: "from-brand-teal to-brand-iris",
     projectIds: ["p1", "p3"],
+    defaultRole: "creator",
     members: [
       { id: "m6", name: "Lara M.", email: "lara@cybix.io", initials: "LM", role: "maintainer", status: "active", joinedAt: "Mar 2024" },
       { id: "m7", name: "Onur P.", email: "onur@cybix.io", initials: "OP", role: "creator", status: "active", joinedAt: "Apr 2024" },
