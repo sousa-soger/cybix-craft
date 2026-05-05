@@ -107,26 +107,66 @@ const Projects = () => {
     setDeleteId(null);
   };
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const view = searchParams.get("view") === "repositories" ? "repositories" : "projects";
+  const setView = (v: "projects" | "repositories") => {
+    const next = new URLSearchParams(searchParams);
+    if (v === "projects") next.delete("view"); else next.set("view", "repositories");
+    setSearchParams(next, { replace: true });
+  };
+
   return (
     <AppShell
       title="Projects and Repositories"
-      subtitle="Create and organize projects, see their repositories and the teams behind them."
+      subtitle={
+        view === "projects"
+          ? "Create and organize projects, see their repositories and the teams behind them."
+          : "Manage repository credentials, OAuth, PATs and SSH keys across all projects."
+      }
       actions={
-        <Button variant="brand" size="sm" onClick={openCreate}>
-          <Plus className="h-4 w-4" /> New Project
-        </Button>
+        view === "projects" ? (
+          <Button variant="brand" size="sm" onClick={openCreate}>
+            <Plus className="h-4 w-4" /> New Project
+          </Button>
+        ) : null
       }
     >
-      {/* Search */}
-      <div className="mb-5 relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search projects…"
-          className="pl-9"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+      {/* View toggle */}
+      <div className="mb-5 inline-flex items-center rounded-lg border border-border/70 bg-card p-1 shadow-sm">
+        <button
+          onClick={() => setView("projects")}
+          className={cn(
+            "px-3 py-1.5 text-xs font-semibold rounded-md transition-base inline-flex items-center gap-1.5",
+            view === "projects" ? "brand-soft-bg text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <FolderKanban className="h-3.5 w-3.5" /> Projects
+        </button>
+        <button
+          onClick={() => setView("repositories")}
+          className={cn(
+            "px-3 py-1.5 text-xs font-semibold rounded-md transition-base inline-flex items-center gap-1.5",
+            view === "repositories" ? "brand-soft-bg text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <ShieldCheck className="h-3.5 w-3.5" /> Repository credentials
+        </button>
       </div>
+
+      {view === "repositories" ? (
+        <RepositoriesAdminView />
+      ) : (
+        <>
+          {/* Search */}
+          <div className="mb-5 relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search projects…"
+              className="pl-9"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
 
       {/* Empty state */}
       {filtered.length === 0 && (
