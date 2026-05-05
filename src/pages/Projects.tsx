@@ -379,6 +379,8 @@ const Projects = () => {
           })}
         </div>
       )}
+        </>
+      )}
 
       <ProjectDialog
         open={dialogOpen}
