@@ -28,7 +28,6 @@ const navGroups: { label: string; items: { to: string; label: string; icon: Reac
     label: "Infrastructure",
     items: [
       { to: "/projects", label: "Projects", icon: FolderKanban },
-      { to: "/repositories", label: "Repositories", icon: GitBranch },
       { to: "/servers", label: "Servers", icon: Server },
     ],
   },

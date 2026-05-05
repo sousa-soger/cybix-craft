@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +9,7 @@ import Projects from "./pages/Projects.tsx";
 import Create from "./pages/Create.tsx";
 import Packages from "./pages/Packages.tsx";
 import Deployments from "./pages/Deployments.tsx";
-import Repositories from "./pages/Repositories.tsx";
+
 import Servers from "./pages/Servers.tsx";
 import Team from "./pages/Team.tsx";
 import Audit from "./pages/Audit.tsx";
@@ -32,7 +32,7 @@ const App = () => (
             <Route path="/create" element={<Create />} />
             <Route path="/packages" element={<Packages />} />
             <Route path="/deployments" element={<Deployments />} />
-            <Route path="/repositories" element={<Repositories />} />
+            <Route path="/repositories" element={<Navigate to="/projects?view=repositories" replace />} />
             <Route path="/servers" element={<Servers />} />
             <Route path="/team" element={<Team />} />
             <Route path="/audit" element={<Audit />} />
