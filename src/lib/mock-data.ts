@@ -3,6 +3,15 @@ export type Environment = "DEV" | "QA" | "PROD";
 export type PackageStatus = "queued" | "running" | "success" | "failed" | "cancelled";
 export type DeploymentStatus = "queued" | "running" | "success" | "failed" | "cancelled";
 
+export type RepoAuthMethod = "oauth" | "pat" | "ssh" | "userpass";
+
+export interface ProjectMember {
+  /** userId - matches TeamMember.id when invited via a team, or freeform user id otherwise */
+  userId: string;
+  /** Per-project role override. If absent, the team default role applies. */
+  role: TeamRole;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -10,6 +19,12 @@ export interface Project {
   color: string;
   repoCount: number;
   lastDeployedAt: string;
+  /** Owner user id (full control over the project, regardless of team role). */
+  ownerId: string;
+  /** Optional team this project belongs to. Members of the team inherit access. */
+  teamId?: string;
+  /** Per-project role overrides (or extra individual collaborators). */
+  members: ProjectMember[];
 }
 
 export interface Repository {
@@ -21,6 +36,9 @@ export interface Repository {
   branches: string[];
   tags: string[];
   status: "connected" | "expired" | "needs-auth";
+  authMethod: RepoAuthMethod;
+  credentialId?: string;
+  lastVerifiedAt: string;
 }
 
 export interface PackageItem {
@@ -71,6 +89,13 @@ export const projects: Project[] = [
     color: "from-brand-rose to-brand-iris",
     repoCount: 4,
     lastDeployedAt: "2h ago",
+    ownerId: "m1",
+    teamId: "t2",
+    members: [
+      { userId: "m2", role: "maintainer" },
+      { userId: "m6", role: "maintainer" },
+      { userId: "m7", role: "creator" },
+    ],
   },
   {
     id: "p2",
@@ -79,6 +104,13 @@ export const projects: Project[] = [
     color: "from-brand-teal to-brand-iris",
     repoCount: 6,
     lastDeployedAt: "Yesterday",
+    ownerId: "m1",
+    teamId: "t1",
+    members: [
+      { userId: "m2", role: "maintainer" },
+      { userId: "m3", role: "creator" },
+      { userId: "m4", role: "deployer" },
+    ],
   },
   {
     id: "p3",
@@ -87,6 +119,12 @@ export const projects: Project[] = [
     color: "from-brand-iris to-brand-teal",
     repoCount: 2,
     lastDeployedAt: "3d ago",
+    ownerId: "m6",
+    teamId: "t2",
+    members: [
+      { userId: "m7", role: "creator" },
+      { userId: "m8", role: "deployer" },
+    ],
   },
   {
     id: "p4",
@@ -95,6 +133,12 @@ export const projects: Project[] = [
     color: "from-brand-rose to-brand-teal",
     repoCount: 3,
     lastDeployedAt: "1w ago",
+    ownerId: "m2",
+    teamId: "t1",
+    members: [
+      { userId: "m3", role: "creator" },
+      { userId: "m5", role: "viewer" },
+    ],
   },
 ];
 
@@ -108,6 +152,9 @@ export const repositories: Repository[] = [
     branches: ["main", "develop", "release/4.2", "feature/checkout-v2"],
     tags: ["v4.2.0", "v4.1.3", "v4.1.2", "v4.1.1", "v4.0.0"],
     status: "connected",
+    authMethod: "oauth",
+    credentialId: "cred-gh-1",
+    lastVerifiedAt: "2h ago",
   },
   {
     id: "r2",
@@ -118,6 +165,9 @@ export const repositories: Repository[] = [
     branches: ["main", "staging"],
     tags: ["v2.7.0", "v2.6.4"],
     status: "connected",
+    authMethod: "pat",
+    credentialId: "cred-gl-1",
+    lastVerifiedAt: "1d ago",
   },
   {
     id: "r3",
@@ -128,6 +178,9 @@ export const repositories: Repository[] = [
     branches: ["main", "develop", "hotfix/auth"],
     tags: ["v8.1.0", "v8.0.2", "v8.0.1"],
     status: "connected",
+    authMethod: "oauth",
+    credentialId: "cred-gh-1",
+    lastVerifiedAt: "3h ago",
   },
   {
     id: "r4",
@@ -138,6 +191,9 @@ export const repositories: Repository[] = [
     branches: ["main", "develop"],
     tags: ["v3.4.0", "v3.3.1"],
     status: "connected",
+    authMethod: "ssh",
+    credentialId: "cred-ssh-1",
+    lastVerifiedAt: "5d ago",
   },
   {
     id: "r5",
@@ -148,6 +204,8 @@ export const repositories: Repository[] = [
     branches: ["main", "release/ios-7", "release/android-7"],
     tags: ["v7.0.0", "v6.9.2"],
     status: "needs-auth",
+    authMethod: "pat",
+    lastVerifiedAt: "—",
   },
   {
     id: "r6",
@@ -158,8 +216,11 @@ export const repositories: Repository[] = [
     branches: ["main"],
     tags: ["v1.2.0"],
     status: "expired",
+    authMethod: "userpass",
+    lastVerifiedAt: "12d ago",
   },
 ];
+
 
 export const packages: PackageItem[] = [
   {
@@ -343,6 +404,8 @@ export interface Team {
   avatarColor: string;
   members: TeamMember[];
   projectIds: string[];
+  /** Default role used when mass-inviting people to this team. */
+  defaultRole: TeamRole;
 }
 
 export const teams: Team[] = [
@@ -352,6 +415,7 @@ export const teams: Team[] = [
     slug: "cybix-core",
     avatarColor: "from-brand-rose to-brand-iris",
     projectIds: ["p1", "p2", "p4"],
+    defaultRole: "creator",
     members: [
       { id: "m1", name: "Demir A.", email: "demir@cybix.io", initials: "DA", role: "owner", status: "active", joinedAt: "Jan 2024" },
       { id: "m2", name: "Selin K.", email: "selin@cybix.io", initials: "SK", role: "maintainer", status: "active", joinedAt: "Feb 2024" },
@@ -366,6 +430,7 @@ export const teams: Team[] = [
     slug: "atlas-squad",
     avatarColor: "from-brand-teal to-brand-iris",
     projectIds: ["p1", "p3"],
+    defaultRole: "creator",
     members: [
       { id: "m6", name: "Lara M.", email: "lara@cybix.io", initials: "LM", role: "maintainer", status: "active", joinedAt: "Mar 2024" },
       { id: "m7", name: "Onur P.", email: "onur@cybix.io", initials: "OP", role: "creator", status: "active", joinedAt: "Apr 2024" },
@@ -391,3 +456,48 @@ export const BRAND_GRADIENT_OPTIONS: { id: string; value: string }[] = [
   { id: "iris-teal", value: "from-brand-iris to-brand-teal" },
   { id: "rose-teal", value: "from-brand-rose to-brand-teal" },
 ];
+
+/* ---------- Helpers ---------- */
+
+/** Effective role for a user on a project: per-project override > team default > viewer */
+export function effectiveRole(project: Project, userId: string): TeamRole | null {
+  if (project.ownerId === userId) return "owner";
+  const override = project.members.find((m) => m.userId === userId);
+  if (override) return override.role;
+  if (project.teamId) {
+    const team = teams.find((t) => t.id === project.teamId);
+    const teamMember = team?.members.find((m) => m.id === userId);
+    if (teamMember) return teamMember.role;
+  }
+  return null;
+}
+
+/** All users (team members + per-project members) who have access to a project */
+export function projectAccessList(project: Project): { userId: string; role: TeamRole; source: "owner" | "project" | "team" }[] {
+  const out: { userId: string; role: TeamRole; source: "owner" | "project" | "team" }[] = [];
+  out.push({ userId: project.ownerId, role: "owner", source: "owner" });
+  if (project.teamId) {
+    const team = teams.find((t) => t.id === project.teamId);
+    team?.members.forEach((m) => {
+      if (m.id === project.ownerId) return;
+      const override = project.members.find((pm) => pm.userId === m.id);
+      out.push({ userId: m.id, role: override?.role ?? m.role, source: override ? "project" : "team" });
+    });
+  }
+  project.members.forEach((pm) => {
+    if (pm.userId === project.ownerId) return;
+    if (out.find((x) => x.userId === pm.userId)) return;
+    out.push({ userId: pm.userId, role: pm.role, source: "project" });
+  });
+  return out;
+}
+
+/** Lookup a user across all teams (for displaying name/avatar). */
+export function findUser(userId: string): TeamMember | undefined {
+  for (const t of teams) {
+    const m = t.members.find((x) => x.id === userId);
+    if (m) return m;
+  }
+  return undefined;
+}
+

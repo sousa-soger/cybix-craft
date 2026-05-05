@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Plus,
   FolderKanban,
@@ -13,10 +14,13 @@ import {
   Search,
   X,
   Rocket,
+  Crown,
+  ShieldCheck,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,10 +35,15 @@ import {
   projects as initialProjects,
   repositories,
   teams,
+  CURRENT_USER_ID,
+  ROLE_META,
+  findUser,
+  projectAccessList,
   type Project,
   type RepoProvider,
 } from "@/lib/mock-data";
 import { ProjectDialog } from "@/components/project-dialog";
+import { RepositoriesAdminView } from "@/components/repositories-admin-view";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -83,7 +92,7 @@ const Projects = () => {
       const id = `p-${Date.now()}`;
       setList((prev) => [
         ...prev,
-        { id, ...data, repoCount: 0, lastDeployedAt: "—" },
+        { id, ...data, repoCount: 0, lastDeployedAt: "—", ownerId: CURRENT_USER_ID, members: [] },
       ]);
       toast.success("Project created", { description: data.name });
     }
@@ -98,26 +107,66 @@ const Projects = () => {
     setDeleteId(null);
   };
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const view = searchParams.get("view") === "repositories" ? "repositories" : "projects";
+  const setView = (v: "projects" | "repositories") => {
+    const next = new URLSearchParams(searchParams);
+    if (v === "projects") next.delete("view"); else next.set("view", "repositories");
+    setSearchParams(next, { replace: true });
+  };
+
   return (
     <AppShell
       title="Projects and Repositories"
-      subtitle="Create and organize projects, see their repositories and the teams behind them."
+      subtitle={
+        view === "projects"
+          ? "Create and organize projects, see their repositories and the teams behind them."
+          : "Manage repository credentials, OAuth, PATs and SSH keys across all projects."
+      }
       actions={
-        <Button variant="brand" size="sm" onClick={openCreate}>
-          <Plus className="h-4 w-4" /> New Project
-        </Button>
+        view === "projects" ? (
+          <Button variant="brand" size="sm" onClick={openCreate}>
+            <Plus className="h-4 w-4" /> New Project
+          </Button>
+        ) : null
       }
     >
-      {/* Search */}
-      <div className="mb-5 relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search projects…"
-          className="pl-9"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+      {/* View toggle */}
+      <div className="mb-5 inline-flex items-center rounded-lg border border-border/70 bg-card p-1 shadow-sm">
+        <button
+          onClick={() => setView("projects")}
+          className={cn(
+            "px-3 py-1.5 text-xs font-semibold rounded-md transition-base inline-flex items-center gap-1.5",
+            view === "projects" ? "brand-soft-bg text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <FolderKanban className="h-3.5 w-3.5" /> Projects
+        </button>
+        <button
+          onClick={() => setView("repositories")}
+          className={cn(
+            "px-3 py-1.5 text-xs font-semibold rounded-md transition-base inline-flex items-center gap-1.5",
+            view === "repositories" ? "brand-soft-bg text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <ShieldCheck className="h-3.5 w-3.5" /> Repository credentials
+        </button>
       </div>
+
+      {view === "repositories" ? (
+        <RepositoriesAdminView />
+      ) : (
+        <>
+          {/* Search */}
+          <div className="mb-5 relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search projects…"
+              className="pl-9"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
 
       {/* Empty state */}
       {filtered.length === 0 && (
@@ -220,13 +269,21 @@ const Projects = () => {
                   >
                     {p.description || "No description."}
                   </div>
-                  <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground">
+                  <div className="mt-3 flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
                     <span className="inline-flex items-center gap-1">
                       <GitBranch className="h-3 w-3" /> {repoCount} repos
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <Users className="h-3 w-3" /> {teamCount} teams
                     </span>
+                    {(() => {
+                      const owner = findUser(p.ownerId);
+                      return owner ? (
+                        <span className="inline-flex items-center gap-1">
+                          <Crown className="h-3 w-3 text-primary" /> {owner.name}
+                        </span>
+                      ) : null;
+                    })()}
                     <span className="ml-auto">{p.lastDeployedAt}</span>
                   </div>
                 </div>
@@ -234,7 +291,7 @@ const Projects = () => {
                 {/* Expanded details */}
                 {active && (
                   <div
-                    className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border/60 animate-accordion-down"
+                    className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-border/60 animate-accordion-down"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {/* Repositories */}
@@ -322,6 +379,48 @@ const Projects = () => {
                         </ul>
                       )}
                     </div>
+
+                    {/* People (effective access) */}
+                    <div className="p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-semibold inline-flex items-center gap-2">
+                          <ShieldCheck className="h-4 w-4 text-primary" /> People & roles
+                        </h4>
+                        <span className="text-[11px] text-muted-foreground">{projectAccessList(p).length}</span>
+                      </div>
+                      <ul className="space-y-2">
+                        {projectAccessList(p).map((entry) => {
+                          const u = findUser(entry.userId);
+                          if (!u) return null;
+                          const meta = ROLE_META[entry.role];
+                          return (
+                            <li
+                              key={entry.userId}
+                              className="flex items-center gap-3 rounded-lg border border-border/60 p-2.5 hover:shadow-soft transition-base"
+                            >
+                              <Avatar className="h-8 w-8 shrink-0">
+                                <AvatarFallback className="brand-gradient-bg text-[hsl(var(--on-brand))] text-[10px] font-semibold">
+                                  {u.initials}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs font-semibold truncate flex items-center gap-1">
+                                  {u.name}
+                                  {entry.source === "owner" && <Crown className="h-3 w-3 text-primary" />}
+                                </div>
+                                <div className="text-[10px] text-muted-foreground truncate">
+                                  {entry.source === "team" ? "via team" : entry.source === "project" ? "project override" : "owner"}
+                                </div>
+                              </div>
+                              <span className="text-[10px] font-medium px-2 py-0.5 rounded-md border border-border/60 inline-flex items-center gap-1.5 whitespace-nowrap">
+                                <span className={cn("h-2 w-2 rounded-full bg-gradient-to-br", meta.color)} />
+                                {meta.label}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
                   </div>
                 )}
               </article>
@@ -329,6 +428,8 @@ const Projects = () => {
             );
           })}
         </div>
+      )}
+        </>
       )}
 
       <ProjectDialog

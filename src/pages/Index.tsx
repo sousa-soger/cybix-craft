@@ -196,7 +196,7 @@ const Index = () => {
       <section className="mt-6">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold">Projects</h3>
-          <Link to="/repositories" className="text-xs font-medium text-primary inline-flex items-center gap-1 hover:underline">
+          <Link to="/projects?view=repositories" className="text-xs font-medium text-primary inline-flex items-center gap-1 hover:underline">
             Manage repositories <ArrowUpRight className="h-3 w-3" />
           </Link>
         </div>
