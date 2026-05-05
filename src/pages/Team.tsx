@@ -58,9 +58,9 @@ const TeamPage = () => {
     setActiveId(team.id);
   };
 
-  const handleInvite = (member: TeamMember) => {
+  const handleInvite = (members: TeamMember[]) => {
     if (!active) return;
-    updateTeam(active.id, (t) => ({ ...t, members: [...t.members, member] }));
+    updateTeam(active.id, (t) => ({ ...t, members: [...t.members, ...members] }));
   };
 
   const handleRoleChange = (memberId: string, role: TeamRole) => {
