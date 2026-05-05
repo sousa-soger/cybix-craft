@@ -456,3 +456,48 @@ export const BRAND_GRADIENT_OPTIONS: { id: string; value: string }[] = [
   { id: "iris-teal", value: "from-brand-iris to-brand-teal" },
   { id: "rose-teal", value: "from-brand-rose to-brand-teal" },
 ];
+
+/* ---------- Helpers ---------- */
+
+/** Effective role for a user on a project: per-project override > team default > viewer */
+export function effectiveRole(project: Project, userId: string): TeamRole | null {
+  if (project.ownerId === userId) return "owner";
+  const override = project.members.find((m) => m.userId === userId);
+  if (override) return override.role;
+  if (project.teamId) {
+    const team = teams.find((t) => t.id === project.teamId);
+    const teamMember = team?.members.find((m) => m.id === userId);
+    if (teamMember) return teamMember.role;
+  }
+  return null;
+}
+
+/** All users (team members + per-project members) who have access to a project */
+export function projectAccessList(project: Project): { userId: string; role: TeamRole; source: "owner" | "project" | "team" }[] {
+  const out: { userId: string; role: TeamRole; source: "owner" | "project" | "team" }[] = [];
+  out.push({ userId: project.ownerId, role: "owner", source: "owner" });
+  if (project.teamId) {
+    const team = teams.find((t) => t.id === project.teamId);
+    team?.members.forEach((m) => {
+      if (m.id === project.ownerId) return;
+      const override = project.members.find((pm) => pm.userId === m.id);
+      out.push({ userId: m.id, role: override?.role ?? m.role, source: override ? "project" : "team" });
+    });
+  }
+  project.members.forEach((pm) => {
+    if (pm.userId === project.ownerId) return;
+    if (out.find((x) => x.userId === pm.userId)) return;
+    out.push({ userId: pm.userId, role: pm.role, source: "project" });
+  });
+  return out;
+}
+
+/** Lookup a user across all teams (for displaying name/avatar). */
+export function findUser(userId: string): TeamMember | undefined {
+  for (const t of teams) {
+    const m = t.members.find((x) => x.id === userId);
+    if (m) return m;
+  }
+  return undefined;
+}
+
