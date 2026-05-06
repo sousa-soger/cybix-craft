@@ -4,12 +4,10 @@ import {
   PackagePlus,
   Package,
   Rocket,
-  
   Server,
-  Users,
   ScrollText,
   Settings,
-  FolderKanban,
+  GitBranch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
@@ -27,14 +25,13 @@ const navGroups: { label: string; items: { to: string; label: string; icon: Reac
   {
     label: "Infrastructure",
     items: [
-      { to: "/projects", label: "Projects", icon: FolderKanban },
+      { to: "/repositories", label: "Repositories", icon: GitBranch },
       { to: "/servers", label: "Servers", icon: Server },
     ],
   },
   {
     label: "Governance",
     items: [
-      { to: "/team", label: "Team & Roles", icon: Users },
       { to: "/audit", label: "Audit Logs", icon: ScrollText },
       { to: "/settings", label: "Settings", icon: Settings },
     ],
