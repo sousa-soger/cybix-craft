@@ -11,7 +11,7 @@ import {
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { EnvBadge, StatusBadge } from "@/components/badges";
-import { deployments, packages, projects } from "@/lib/mock-data";
+import { deployments, packages, repositories } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const Index = () => {
@@ -140,7 +140,7 @@ const Index = () => {
           </header>
           <ul className="divide-y divide-border/60">
             {packages.slice(0, 5).map((p) => {
-              const project = projects.find((pr) => pr.id === p.projectId);
+              const repo = repositories.find((r) => r.id === p.repositoryId);
               return (
                 <li key={p.id} className="flex items-center gap-4 p-4 hover:bg-secondary/40 transition-base">
                   <div className="h-10 w-10 rounded-lg brand-soft-bg flex items-center justify-center shrink-0">
@@ -148,7 +148,7 @@ const Index = () => {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-sm font-medium truncate">{project?.name}</span>
+                      <span className="text-sm font-medium truncate font-mono">{repo?.name}</span>
                       <EnvBadge env={p.environment} />
                     </div>
                     <div className="font-mono text-[11px] text-muted-foreground truncate">{p.name}</div>
