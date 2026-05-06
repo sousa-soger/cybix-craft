@@ -33,7 +33,6 @@ import { EnvBadge } from "@/components/badges";
 import { cn } from "@/lib/utils";
 import {
   mockChangeset,
-  projects,
   repositories,
   type Environment,
   type RepoProvider,
@@ -64,10 +63,8 @@ const providerLabel: Record<RepoProvider, string> = {
 export const CreatePackage = () => {
   const { toast } = useToast();
 
-  const [projectId, setProjectId] = useState<string>(projects[0].id);
-  const repos = useMemo(() => repositories.filter((r) => r.projectId === projectId), [projectId]);
-  const [repoId, setRepoId] = useState<string>(repos[0]?.id ?? "");
-  const repo = repos.find((r) => r.id === repoId);
+  const [repoId, setRepoId] = useState<string>(repositories[0]?.id ?? "");
+  const repo = repositories.find((r) => r.id === repoId);
 
   const versionOptions = useMemo(() => {
     if (!repo) return [] as string[];
@@ -77,10 +74,6 @@ export const CreatePackage = () => {
   const [baseVersion, setBaseVersion] = useState<string>(repo?.tags[1] ?? "");
   const [targetVersion, setTargetVersion] = useState<string>(repo?.tags[0] ?? "");
 
-  // Reset versions when repo changes
-  useEffect(() => {
-    setRepoId(repos[0]?.id ?? "");
-  }, [projectId]);
   useEffect(() => {
     if (repo) {
       setBaseVersion(repo.tags[1] ?? repo.branches[0] ?? "");
@@ -116,11 +109,8 @@ export const CreatePackage = () => {
 
   const handleGenerate = () => {
     if (!canSubmit || !repo) return;
-    const project = projects.find((p) => p.id === projectId);
     enqueueJob({
       name: finalName,
-      projectId,
-      projectName: project?.name ?? "",
       repoId: repo.id,
       repoName: repo.name,
       environment,
