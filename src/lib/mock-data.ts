@@ -5,46 +5,38 @@ export type DeploymentStatus = "queued" | "running" | "success" | "failed" | "ca
 
 export type RepoAuthMethod = "oauth" | "pat" | "ssh" | "userpass";
 
-export interface ProjectMember {
-  /** userId - matches TeamMember.id when invited via a team, or freeform user id otherwise */
-  userId: string;
-  /** Per-project role override. If absent, the team default role applies. */
-  role: TeamRole;
-}
+export type TeamRole = "owner" | "maintainer" | "creator" | "deployer" | "viewer";
+export type MemberStatus = "active" | "pending";
 
-export interface Project {
+export interface RepoMember {
   id: string;
   name: string;
-  description: string;
-  color: string;
-  repoCount: number;
-  lastDeployedAt: string;
-  /** Owner user id (full control over the project, regardless of team role). */
-  ownerId: string;
-  /** Optional team this project belongs to. Members of the team inherit access. */
-  teamId?: string;
-  /** Per-project role overrides (or extra individual collaborators). */
-  members: ProjectMember[];
+  email: string;
+  username?: string;
+  initials: string;
+  role: TeamRole;
+  status: MemberStatus;
 }
 
 export interface Repository {
   id: string;
-  projectId: string;
   name: string;
+  url: string;
   provider: RepoProvider;
   defaultBranch: string;
   branches: string[];
   tags: string[];
   status: "connected" | "expired" | "needs-auth";
   authMethod: RepoAuthMethod;
-  credentialId?: string;
+  lastSyncedAt: string;
   lastVerifiedAt: string;
+  ownerId: string;
+  members: RepoMember[];
 }
 
 export interface PackageItem {
   id: string;
   name: string;
-  projectId: string;
   repositoryId: string;
   baseVersion: string;
   targetVersion: string;
@@ -81,152 +73,114 @@ export interface Server {
   status: "online" | "offline";
 }
 
-export const projects: Project[] = [
-  {
-    id: "p1",
-    name: "Atlas Web",
-    description: "Customer-facing storefront and marketing site",
-    color: "from-brand-rose to-brand-iris",
-    repoCount: 4,
-    lastDeployedAt: "2h ago",
-    ownerId: "m1",
-    teamId: "t2",
-    members: [
-      { userId: "m2", role: "maintainer" },
-      { userId: "m6", role: "maintainer" },
-      { userId: "m7", role: "creator" },
-    ],
-  },
-  {
-    id: "p2",
-    name: "Helios API",
-    description: "Core platform REST + GraphQL services",
-    color: "from-brand-teal to-brand-iris",
-    repoCount: 6,
-    lastDeployedAt: "Yesterday",
-    ownerId: "m1",
-    teamId: "t1",
-    members: [
-      { userId: "m2", role: "maintainer" },
-      { userId: "m3", role: "creator" },
-      { userId: "m4", role: "deployer" },
-    ],
-  },
-  {
-    id: "p3",
-    name: "Nimbus Mobile",
-    description: "iOS / Android client release pipelines",
-    color: "from-brand-iris to-brand-teal",
-    repoCount: 2,
-    lastDeployedAt: "3d ago",
-    ownerId: "m6",
-    teamId: "t2",
-    members: [
-      { userId: "m7", role: "creator" },
-      { userId: "m8", role: "deployer" },
-    ],
-  },
-  {
-    id: "p4",
-    name: "Orion Internal",
-    description: "Internal tooling & admin dashboards",
-    color: "from-brand-rose to-brand-teal",
-    repoCount: 3,
-    lastDeployedAt: "1w ago",
-    ownerId: "m2",
-    teamId: "t1",
-    members: [
-      { userId: "m3", role: "creator" },
-      { userId: "m5", role: "viewer" },
-    ],
-  },
-];
+const sampleMembers = (overrides: Partial<RepoMember>[] = []): RepoMember[] => {
+  const base: RepoMember[] = [
+    { id: "m1", name: "Aaron Voon Wu Chun",  email: "aaronvwc@sains.com.my", username: "aaronvwc", initials: "AV", role: "owner",      status: "active" },
+    { id: "m2", name: "Audry Mayla Anak Meeta", email: "audrymm@sains.com.my", username: "audrymm",  initials: "AM", role: "maintainer", status: "active" },
+    { id: "m3", name: "Goh Ee Cheng",       email: "gohec@sains.com.my",   username: "gohec",   initials: "GE", role: "creator",    status: "active" },
+    { id: "m4", name: "Justin Chieng Zen Yue", email: "justinczy@sains.com.my", username: "justinczy", initials: "JC", role: "deployer",  status: "active" },
+  ];
+  if (!overrides.length) return base;
+  return overrides.map((o, i) => ({ ...base[i % base.length], ...o }));
+};
 
 export const repositories: Repository[] = [
   {
     id: "r1",
-    projectId: "p1",
     name: "atlas/web-storefront",
+    url: "https://github.com/atlas/web-storefront",
     provider: "github",
     defaultBranch: "main",
     branches: ["main", "develop", "release/4.2", "feature/checkout-v2"],
     tags: ["v4.2.0", "v4.1.3", "v4.1.2", "v4.1.1", "v4.0.0"],
     status: "connected",
     authMethod: "oauth",
-    credentialId: "cred-gh-1",
+    lastSyncedAt: "2h ago",
     lastVerifiedAt: "2h ago",
+    ownerId: "m1",
+    members: sampleMembers(),
   },
   {
     id: "r2",
-    projectId: "p1",
     name: "atlas/marketing-site",
+    url: "https://gitlab.com/atlas/marketing-site",
     provider: "gitlab",
     defaultBranch: "main",
     branches: ["main", "staging"],
     tags: ["v2.7.0", "v2.6.4"],
     status: "connected",
     authMethod: "pat",
-    credentialId: "cred-gl-1",
+    lastSyncedAt: "1d ago",
     lastVerifiedAt: "1d ago",
+    ownerId: "m1",
+    members: sampleMembers([{}, {}, {}]),
   },
   {
     id: "r3",
-    projectId: "p2",
     name: "helios/core-api",
+    url: "https://github.com/helios/core-api",
     provider: "github",
     defaultBranch: "main",
     branches: ["main", "develop", "hotfix/auth"],
     tags: ["v8.1.0", "v8.0.2", "v8.0.1"],
     status: "connected",
     authMethod: "oauth",
-    credentialId: "cred-gh-1",
+    lastSyncedAt: "3h ago",
     lastVerifiedAt: "3h ago",
+    ownerId: "m2",
+    members: sampleMembers(),
   },
   {
     id: "r4",
-    projectId: "p2",
     name: "helios/graph-gateway",
+    url: "git@git.company.internal:helios/graph-gateway.git",
     provider: "company-server",
     defaultBranch: "main",
     branches: ["main", "develop"],
     tags: ["v3.4.0", "v3.3.1"],
     status: "connected",
     authMethod: "ssh",
-    credentialId: "cred-ssh-1",
+    lastSyncedAt: "5d ago",
     lastVerifiedAt: "5d ago",
+    ownerId: "m1",
+    members: sampleMembers([{}, {}]),
   },
   {
     id: "r5",
-    projectId: "p3",
     name: "nimbus/mobile-client",
+    url: "https://gitlab.sains.com.my/soger/test-1",
     provider: "gitlab",
     defaultBranch: "main",
     branches: ["main", "release/ios-7", "release/android-7"],
     tags: ["v7.0.0", "v6.9.2"],
     status: "needs-auth",
     authMethod: "pat",
+    lastSyncedAt: "—",
     lastVerifiedAt: "—",
+    ownerId: "m3",
+    members: sampleMembers([{}, {}, {}]),
   },
   {
     id: "r6",
-    projectId: "p4",
     name: "orion/admin-dashboard",
+    url: "/Users/dana/code/orion-admin",
     provider: "local-pc",
     defaultBranch: "main",
     branches: ["main"],
     tags: ["v1.2.0"],
     status: "expired",
     authMethod: "userpass",
+    lastSyncedAt: "12d ago",
     lastVerifiedAt: "12d ago",
+    ownerId: "m4",
+    members: sampleMembers([{}, {}]),
   },
 ];
-
 
 export const packages: PackageItem[] = [
   {
     id: "pkg-001",
     name: "PROD-atlas-web-v4.1.3-to-v4.2.0-20251024-1430",
-    projectId: "p1",
     repositoryId: "r1",
     baseVersion: "v4.1.3",
     targetVersion: "v4.2.0",
@@ -237,13 +191,12 @@ export const packages: PackageItem[] = [
     filesModified: 47,
     filesDeleted: 3,
     hasRollback: true,
-    createdBy: "Demir A.",
+    createdBy: "Aaron V.",
     createdAt: "2h ago",
   },
   {
     id: "pkg-002",
     name: "QA-helios-api-v8.0.2-to-main-20251024-1112",
-    projectId: "p2",
     repositoryId: "r3",
     baseVersion: "v8.0.2",
     targetVersion: "main",
@@ -254,13 +207,12 @@ export const packages: PackageItem[] = [
     filesModified: 0,
     filesDeleted: 0,
     hasRollback: true,
-    createdBy: "Selin K.",
+    createdBy: "Audry M.",
     createdAt: "12m ago",
   },
   {
     id: "pkg-003",
     name: "DEV-atlas-web-develop-to-feature-checkout-v2",
-    projectId: "p1",
     repositoryId: "r1",
     baseVersion: "develop",
     targetVersion: "feature/checkout-v2",
@@ -271,13 +223,12 @@ export const packages: PackageItem[] = [
     filesModified: 9,
     filesDeleted: 0,
     hasRollback: false,
-    createdBy: "Mert O.",
+    createdBy: "Goh E.",
     createdAt: "Yesterday",
   },
   {
     id: "pkg-004",
     name: "PROD-helios-graph-v3.3.1-to-v3.4.0",
-    projectId: "p2",
     repositoryId: "r4",
     baseVersion: "v3.3.1",
     targetVersion: "v3.4.0",
@@ -288,13 +239,12 @@ export const packages: PackageItem[] = [
     filesModified: 22,
     filesDeleted: 1,
     hasRollback: true,
-    createdBy: "Ayşe T.",
+    createdBy: "Justin C.",
     createdAt: "Yesterday",
   },
   {
     id: "pkg-005",
     name: "QA-nimbus-mobile-v6.9.2-to-v7.0.0",
-    projectId: "p3",
     repositoryId: "r5",
     baseVersion: "v6.9.2",
     targetVersion: "v7.0.0",
@@ -305,56 +255,16 @@ export const packages: PackageItem[] = [
     filesModified: 0,
     filesDeleted: 0,
     hasRollback: true,
-    createdBy: "Demir A.",
+    createdBy: "Aaron V.",
     createdAt: "3m ago",
   },
 ];
 
 export const deployments: Deployment[] = [
-  {
-    id: "d-401",
-    packageId: "pkg-001",
-    packageName: "PROD-atlas-web-v4.1.3-to-v4.2.0",
-    serverName: "atlas-prod-eu-1",
-    environment: "PROD",
-    status: "success",
-    duration: "1m 42s",
-    deployedBy: "Demir A.",
-    deployedAt: "1h ago",
-  },
-  {
-    id: "d-400",
-    packageId: "pkg-002",
-    packageName: "QA-helios-api-main",
-    serverName: "helios-qa-1",
-    environment: "QA",
-    status: "running",
-    duration: "—",
-    deployedBy: "Selin K.",
-    deployedAt: "Just now",
-  },
-  {
-    id: "d-399",
-    packageId: "pkg-003",
-    packageName: "DEV-atlas-web-checkout",
-    serverName: "atlas-dev-1",
-    environment: "DEV",
-    status: "success",
-    duration: "38s",
-    deployedBy: "Mert O.",
-    deployedAt: "Yesterday",
-  },
-  {
-    id: "d-398",
-    packageId: "pkg-004",
-    packageName: "PROD-helios-graph-v3.4.0",
-    serverName: "helios-prod-eu-1",
-    environment: "PROD",
-    status: "failed",
-    duration: "2m 14s",
-    deployedBy: "Ayşe T.",
-    deployedAt: "Yesterday",
-  },
+  { id: "d-401", packageId: "pkg-001", packageName: "PROD-atlas-web-v4.1.3-to-v4.2.0", serverName: "atlas-prod-eu-1", environment: "PROD", status: "success", duration: "1m 42s", deployedBy: "Aaron V.", deployedAt: "1h ago" },
+  { id: "d-400", packageId: "pkg-002", packageName: "QA-helios-api-main", serverName: "helios-qa-1", environment: "QA", status: "running", duration: "—", deployedBy: "Audry M.", deployedAt: "Just now" },
+  { id: "d-399", packageId: "pkg-003", packageName: "DEV-atlas-web-checkout", serverName: "atlas-dev-1", environment: "DEV", status: "success", duration: "38s", deployedBy: "Goh E.", deployedAt: "Yesterday" },
+  { id: "d-398", packageId: "pkg-004", packageName: "PROD-helios-graph-v3.4.0", serverName: "helios-prod-eu-1", environment: "PROD", status: "failed", duration: "2m 14s", deployedBy: "Justin C.", deployedAt: "Yesterday" },
 ];
 
 export const servers: Server[] = [
@@ -375,7 +285,6 @@ export interface ChangeSet {
 
 export function mockChangeset(base: string, target: string): ChangeSet | null {
   if (!base || !target || base === target) return null;
-  // Deterministic-ish mock based on string lengths
   const seed = (base.length * 7 + target.length * 13) % 60;
   const added = Array.from({ length: 6 + (seed % 12) }, (_, i) => `src/feature-${i + 1}/index.ts`);
   const modified = Array.from({ length: 12 + (seed % 25) }, (_, i) => `src/components/Component${i + 1}.tsx`);
@@ -384,120 +293,12 @@ export function mockChangeset(base: string, target: string): ChangeSet | null {
   return { added, modified, deleted, estimatedSizeMB: sizeMB };
 }
 
-export type TeamRole = "owner" | "maintainer" | "creator" | "deployer" | "viewer";
-export type MemberStatus = "active" | "pending";
-
-export interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  initials: string;
-  role: TeamRole;
-  status: MemberStatus;
-  joinedAt: string;
-}
-
-export interface Team {
-  id: string;
-  name: string;
-  slug: string;
-  avatarColor: string;
-  members: TeamMember[];
-  projectIds: string[];
-  /** Default role used when mass-inviting people to this team. */
-  defaultRole: TeamRole;
-}
-
-export const teams: Team[] = [
-  {
-    id: "t1",
-    name: "Cybix Core",
-    slug: "cybix-core",
-    avatarColor: "from-brand-rose to-brand-iris",
-    projectIds: ["p1", "p2", "p4"],
-    defaultRole: "creator",
-    members: [
-      { id: "m1", name: "Demir A.", email: "demir@cybix.io", initials: "DA", role: "owner", status: "active", joinedAt: "Jan 2024" },
-      { id: "m2", name: "Selin K.", email: "selin@cybix.io", initials: "SK", role: "maintainer", status: "active", joinedAt: "Feb 2024" },
-      { id: "m3", name: "Mert O.", email: "mert@cybix.io", initials: "MO", role: "creator", status: "active", joinedAt: "Mar 2024" },
-      { id: "m4", name: "Ayşe T.", email: "ayse@cybix.io", initials: "AT", role: "deployer", status: "active", joinedAt: "Apr 2024" },
-      { id: "m5", name: "Kaan B.", email: "kaan@cybix.io", initials: "KB", role: "viewer", status: "pending", joinedAt: "Pending" },
-    ],
-  },
-  {
-    id: "t2",
-    name: "Atlas Squad",
-    slug: "atlas-squad",
-    avatarColor: "from-brand-teal to-brand-iris",
-    projectIds: ["p1", "p3"],
-    defaultRole: "creator",
-    members: [
-      { id: "m6", name: "Lara M.", email: "lara@cybix.io", initials: "LM", role: "maintainer", status: "active", joinedAt: "Mar 2024" },
-      { id: "m7", name: "Onur P.", email: "onur@cybix.io", initials: "OP", role: "creator", status: "active", joinedAt: "Apr 2024" },
-      { id: "m8", name: "Ece D.", email: "ece@cybix.io", initials: "ED", role: "deployer", status: "active", joinedAt: "May 2024" },
-      { id: "m9", name: "newhire@cybix.io", email: "newhire@cybix.io", initials: "NH", role: "viewer", status: "pending", joinedAt: "Pending" },
-    ],
-  },
-];
-
 export const ROLE_META: Record<TeamRole, { label: string; desc: string; color: string }> = {
   owner:      { label: "Owner",           desc: "Full control, billing, role configuration",         color: "from-brand-rose to-brand-iris" },
-  maintainer: { label: "Maintainer",      desc: "Configure projects, repositories and policies",     color: "from-brand-iris to-brand-teal" },
+  maintainer: { label: "Maintainer",      desc: "Configure repository and policies",                 color: "from-brand-iris to-brand-teal" },
   creator:    { label: "Package Creator", desc: "Create packages, cannot deploy to PROD",            color: "from-brand-teal to-brand-iris" },
   deployer:   { label: "Deployer",        desc: "Deploy approved packages to permitted environments", color: "from-brand-rose to-brand-teal" },
   viewer:     { label: "Viewer",          desc: "Read-only access to packages and deployments",      color: "from-brand-iris to-brand-rose" },
 };
 
 export const CURRENT_USER_ID = "m1";
-
-export const BRAND_GRADIENT_OPTIONS: { id: string; value: string }[] = [
-  { id: "rose-iris", value: "from-brand-rose to-brand-iris" },
-  { id: "teal-iris", value: "from-brand-teal to-brand-iris" },
-  { id: "iris-teal", value: "from-brand-iris to-brand-teal" },
-  { id: "rose-teal", value: "from-brand-rose to-brand-teal" },
-];
-
-/* ---------- Helpers ---------- */
-
-/** Effective role for a user on a project: per-project override > team default > viewer */
-export function effectiveRole(project: Project, userId: string): TeamRole | null {
-  if (project.ownerId === userId) return "owner";
-  const override = project.members.find((m) => m.userId === userId);
-  if (override) return override.role;
-  if (project.teamId) {
-    const team = teams.find((t) => t.id === project.teamId);
-    const teamMember = team?.members.find((m) => m.id === userId);
-    if (teamMember) return teamMember.role;
-  }
-  return null;
-}
-
-/** All users (team members + per-project members) who have access to a project */
-export function projectAccessList(project: Project): { userId: string; role: TeamRole; source: "owner" | "project" | "team" }[] {
-  const out: { userId: string; role: TeamRole; source: "owner" | "project" | "team" }[] = [];
-  out.push({ userId: project.ownerId, role: "owner", source: "owner" });
-  if (project.teamId) {
-    const team = teams.find((t) => t.id === project.teamId);
-    team?.members.forEach((m) => {
-      if (m.id === project.ownerId) return;
-      const override = project.members.find((pm) => pm.userId === m.id);
-      out.push({ userId: m.id, role: override?.role ?? m.role, source: override ? "project" : "team" });
-    });
-  }
-  project.members.forEach((pm) => {
-    if (pm.userId === project.ownerId) return;
-    if (out.find((x) => x.userId === pm.userId)) return;
-    out.push({ userId: pm.userId, role: pm.role, source: "project" });
-  });
-  return out;
-}
-
-/** Lookup a user across all teams (for displaying name/avatar). */
-export function findUser(userId: string): TeamMember | undefined {
-  for (const t of teams) {
-    const m = t.members.find((x) => x.id === userId);
-    if (m) return m;
-  }
-  return undefined;
-}
-
