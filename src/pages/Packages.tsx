@@ -4,7 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EnvBadge, StatusBadge } from "@/components/badges";
-import { packages, projects, repositories } from "@/lib/mock-data";
+import { packages, repositories } from "@/lib/mock-data";
 
 const Packages = () => (
   <AppShell
@@ -31,7 +31,7 @@ const Packages = () => (
           <thead className="bg-secondary/50 text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="text-left font-medium px-5 py-3">Package</th>
-              <th className="text-left font-medium px-5 py-3">Project</th>
+              <th className="text-left font-medium px-5 py-3">Repository</th>
               <th className="text-left font-medium px-5 py-3">Versions</th>
               <th className="text-left font-medium px-5 py-3">Env</th>
               <th className="text-left font-medium px-5 py-3">Size</th>
@@ -42,7 +42,6 @@ const Packages = () => (
           </thead>
           <tbody className="divide-y divide-border/60">
             {packages.map((p) => {
-              const project = projects.find((pr) => pr.id === p.projectId);
               const repo = repositories.find((r) => r.id === p.repositoryId);
               return (
                 <tr key={p.id} className="hover:bg-secondary/40 transition-base">
@@ -50,7 +49,7 @@ const Packages = () => (
                     <div className="font-mono text-[11px] text-foreground/80 max-w-xs truncate">{p.name}</div>
                     <div className="text-[11px] text-muted-foreground">{repo?.name}</div>
                   </td>
-                  <td className="px-5 py-3">{project?.name}</td>
+                  <td className="px-5 py-3 font-mono text-xs">{repo?.name ?? "—"}</td>
                   <td className="px-5 py-3">
                     <div className="font-mono text-xs">
                       {p.baseVersion} <span className="text-muted-foreground">→</span> {p.targetVersion}
