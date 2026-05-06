@@ -33,7 +33,6 @@ import { EnvBadge } from "@/components/badges";
 import { cn } from "@/lib/utils";
 import {
   mockChangeset,
-  projects,
   repositories,
   type Environment,
   type RepoProvider,
@@ -64,10 +63,8 @@ const providerLabel: Record<RepoProvider, string> = {
 export const CreatePackage = () => {
   const { toast } = useToast();
 
-  const [projectId, setProjectId] = useState<string>(projects[0].id);
-  const repos = useMemo(() => repositories.filter((r) => r.projectId === projectId), [projectId]);
-  const [repoId, setRepoId] = useState<string>(repos[0]?.id ?? "");
-  const repo = repos.find((r) => r.id === repoId);
+  const [repoId, setRepoId] = useState<string>(repositories[0]?.id ?? "");
+  const repo = repositories.find((r) => r.id === repoId);
 
   const versionOptions = useMemo(() => {
     if (!repo) return [] as string[];
@@ -77,10 +74,6 @@ export const CreatePackage = () => {
   const [baseVersion, setBaseVersion] = useState<string>(repo?.tags[1] ?? "");
   const [targetVersion, setTargetVersion] = useState<string>(repo?.tags[0] ?? "");
 
-  // Reset versions when repo changes
-  useEffect(() => {
-    setRepoId(repos[0]?.id ?? "");
-  }, [projectId]);
   useEffect(() => {
     if (repo) {
       setBaseVersion(repo.tags[1] ?? repo.branches[0] ?? "");
@@ -116,11 +109,8 @@ export const CreatePackage = () => {
 
   const handleGenerate = () => {
     if (!canSubmit || !repo) return;
-    const project = projects.find((p) => p.id === projectId);
     enqueueJob({
       name: finalName,
-      projectId,
-      projectName: project?.name ?? "",
       repoId: repo.id,
       repoName: repo.name,
       environment,
@@ -142,39 +132,26 @@ export const CreatePackage = () => {
     <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
       {/* LEFT: Sections */}
       <div className="space-y-5">
-        {/* SECTION 1 — Project & Repository */}
+        {/* SECTION 1 — Repository */}
         <SectionCard
           step={1}
-          title="Project & Repository"
+          title="Repository"
           subtitle="Choose where this package comes from."
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Project</Label>
-              <Select value={projectId} onValueChange={setProjectId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {projects.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Repository</Label>
-              <Select value={repoId} onValueChange={setRepoId}>
-                <SelectTrigger><SelectValue placeholder="Select repository" /></SelectTrigger>
-                <SelectContent>
-                  {repos.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>
-                      <span className="flex items-center gap-2">
-                        {providerIcon(r.provider)} {r.name}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label>Repository</Label>
+            <Select value={repoId} onValueChange={setRepoId}>
+              <SelectTrigger><SelectValue placeholder="Select repository" /></SelectTrigger>
+              <SelectContent>
+                {repositories.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>
+                    <span className="flex items-center gap-2">
+                      {providerIcon(r.provider)} {r.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           {repo && (
             <div className="flex flex-wrap items-center gap-2 mt-4 text-xs text-muted-foreground">
@@ -406,7 +383,7 @@ export const CreatePackage = () => {
           </div>
 
           <div className="space-y-3 text-sm">
-            <SummaryRow label="Project" value={projects.find((p) => p.id === projectId)?.name ?? "—"} />
+            
             <SummaryRow
               label="Repository"
               value={repo?.name ?? "—"}

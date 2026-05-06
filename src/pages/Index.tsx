@@ -11,7 +11,7 @@ import {
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { EnvBadge, StatusBadge } from "@/components/badges";
-import { deployments, packages, projects } from "@/lib/mock-data";
+import { deployments, packages, repositories } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const Index = () => {
@@ -140,7 +140,7 @@ const Index = () => {
           </header>
           <ul className="divide-y divide-border/60">
             {packages.slice(0, 5).map((p) => {
-              const project = projects.find((pr) => pr.id === p.projectId);
+              const repo = repositories.find((r) => r.id === p.repositoryId);
               return (
                 <li key={p.id} className="flex items-center gap-4 p-4 hover:bg-secondary/40 transition-base">
                   <div className="h-10 w-10 rounded-lg brand-soft-bg flex items-center justify-center shrink-0">
@@ -148,7 +148,7 @@ const Index = () => {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-sm font-medium truncate">{project?.name}</span>
+                      <span className="text-sm font-medium truncate font-mono">{repo?.name}</span>
                       <EnvBadge env={p.environment} />
                     </div>
                     <div className="font-mono text-[11px] text-muted-foreground truncate">{p.name}</div>
@@ -192,25 +192,27 @@ const Index = () => {
         </section>
       </div>
 
-      {/* Projects */}
+      {/* Repositories */}
       <section className="mt-6">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold">Projects</h3>
-          <Link to="/projects?view=repositories" className="text-xs font-medium text-primary inline-flex items-center gap-1 hover:underline">
+          <h3 className="text-sm font-semibold">Repositories</h3>
+          <Link to="/repositories" className="text-xs font-medium text-primary inline-flex items-center gap-1 hover:underline">
             Manage repositories <ArrowUpRight className="h-3 w-3" />
           </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {projects.map((p) => (
-            <div key={p.id} className="section-card p-5 group cursor-pointer">
-              <div className={cn("h-10 w-10 rounded-lg bg-gradient-to-br shadow-soft mb-3", p.color)} />
-              <div className="text-sm font-semibold">{p.name}</div>
-              <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.description}</div>
-              <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
-                <span>{p.repoCount} repositories</span>
-                <span>· {p.lastDeployedAt}</span>
+          {repositories.slice(0, 4).map((r) => (
+            <Link key={r.id} to="/repositories" className="section-card p-5 group">
+              <div className="h-10 w-10 rounded-lg brand-soft-bg shadow-soft mb-3 flex items-center justify-center text-primary text-xs font-bold">
+                {r.provider.slice(0, 2).toUpperCase()}
               </div>
-            </div>
+              <div className="text-sm font-semibold font-mono truncate">{r.name}</div>
+              <div className="text-xs text-muted-foreground mt-1 truncate">{r.url}</div>
+              <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>{r.branches.length} branches</span>
+                <span>· {r.members.length} members</span>
+              </div>
+            </Link>
           ))}
         </div>
       </section>
