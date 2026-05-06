@@ -4,9 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { projects, type RepoProvider } from "@/lib/mock-data";
+import { type RepoProvider } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -64,7 +63,6 @@ const PROVIDERS: ProviderMeta[] = [
 export const ConnectRepositoryDialog = ({ open, onOpenChange }: ConnectRepositoryDialogProps) => {
   const [step, setStep] = useState<Step>("provider");
   const [provider, setProvider] = useState<ProviderMeta | null>(null);
-  const [projectId, setProjectId] = useState<string>("");
   const [repoUrl, setRepoUrl] = useState("");
   const [defaultBranch, setDefaultBranch] = useState("main");
   const [token, setToken] = useState("");
@@ -74,7 +72,6 @@ export const ConnectRepositoryDialog = ({ open, onOpenChange }: ConnectRepositor
   const reset = () => {
     setStep("provider");
     setProvider(null);
-    setProjectId("");
     setRepoUrl("");
     setDefaultBranch("main");
     setToken("");
@@ -107,7 +104,6 @@ export const ConnectRepositoryDialog = ({ open, onOpenChange }: ConnectRepositor
   };
 
   const canSubmitDetails =
-    !!projectId &&
     !!defaultBranch &&
     (provider?.authMethod === "path"
       ? !!localPath
@@ -270,21 +266,6 @@ export const ConnectRepositoryDialog = ({ open, onOpenChange }: ConnectRepositor
 
           {step === "details" && provider && (
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Project</Label>
-                <Select value={projectId} onValueChange={setProjectId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
 
               {provider.authMethod === "path" ? (
                 <div className="space-y-2">
