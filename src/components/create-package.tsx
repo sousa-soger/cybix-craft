@@ -383,7 +383,7 @@ export const CreatePackage = () => {
           </div>
 
           <div className="space-y-3 text-sm">
-            <SummaryRow label="Project" value={projects.find((p) => p.id === projectId)?.name ?? "—"} />
+            
             <SummaryRow
               label="Repository"
               value={repo?.name ?? "—"}

@@ -15,8 +15,6 @@ export const QUEUE_STAGES = [
 export interface QueueJob {
   id: string;
   name: string;
-  projectId: string;
-  projectName: string;
   repoId: string;
   repoName: string;
   environment: Environment;
