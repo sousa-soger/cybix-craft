@@ -132,39 +132,26 @@ export const CreatePackage = () => {
     <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
       {/* LEFT: Sections */}
       <div className="space-y-5">
-        {/* SECTION 1 — Project & Repository */}
+        {/* SECTION 1 — Repository */}
         <SectionCard
           step={1}
-          title="Project & Repository"
+          title="Repository"
           subtitle="Choose where this package comes from."
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Project</Label>
-              <Select value={projectId} onValueChange={setProjectId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {projects.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Repository</Label>
-              <Select value={repoId} onValueChange={setRepoId}>
-                <SelectTrigger><SelectValue placeholder="Select repository" /></SelectTrigger>
-                <SelectContent>
-                  {repos.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>
-                      <span className="flex items-center gap-2">
-                        {providerIcon(r.provider)} {r.name}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label>Repository</Label>
+            <Select value={repoId} onValueChange={setRepoId}>
+              <SelectTrigger><SelectValue placeholder="Select repository" /></SelectTrigger>
+              <SelectContent>
+                {repositories.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>
+                    <span className="flex items-center gap-2">
+                      {providerIcon(r.provider)} {r.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           {repo && (
             <div className="flex flex-wrap items-center gap-2 mt-4 text-xs text-muted-foreground">
