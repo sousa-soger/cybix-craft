@@ -170,6 +170,21 @@ export const RepositoryDetailsSheet = ({ repo, open, onOpenChange, onUpdate, onR
                     {repo.url.startsWith("http") && <ExternalLink className="h-3 w-3 shrink-0" />}
                   </a>
                   <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    {(() => {
+                      const owner = repo.members.find((m) => m.id === repo.ownerId);
+                      if (!owner) return null;
+                      return (
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold pl-1 pr-2 py-0.5 rounded-full border border-primary/30 bg-primary/5 text-foreground">
+                          <Avatar className="h-4 w-4">
+                            <AvatarFallback className="brand-gradient-bg text-[hsl(var(--on-brand))] text-[8px] font-semibold">
+                              {owner.initials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <Crown className="h-2.5 w-2.5 text-primary" />
+                          Owner · {owner.name}
+                        </span>
+                      );
+                    })()}
                     <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-secondary/70 text-muted-foreground inline-flex items-center gap-1">
                       <GitBranch className="h-3 w-3" /> {repo.branches.length} branches
                     </span>
