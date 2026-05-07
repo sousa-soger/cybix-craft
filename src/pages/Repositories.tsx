@@ -210,19 +210,22 @@ const Repositories = () => {
       {/* List view */}
       {view === "list" && filtered.length > 0 && (
         <div className="section-card p-0 overflow-hidden">
-          <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto_auto_auto] gap-3 px-5 py-2.5 text-[10px] uppercase tracking-wider text-muted-foreground bg-secondary/40 border-b border-border/60 font-semibold">
+          <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)_auto_auto_auto_auto] gap-3 px-5 py-2.5 text-[10px] uppercase tracking-wider text-muted-foreground bg-secondary/40 border-b border-border/60 font-semibold">
             <div>Repository</div>
+            <div className="hidden md:block">Owner</div>
             <div className="hidden md:block">Provider</div>
             <div className="hidden md:block text-right">Branches</div>
             <div className="hidden md:block text-right">Members</div>
             <div className="text-right">Status</div>
           </div>
           <ul className="divide-y divide-border/60">
-            {filtered.map((r) => (
+            {filtered.map((r) => {
+              const owner = r.members.find((m) => m.id === r.ownerId);
+              return (
               <li key={r.id}>
                 <button
                   onClick={() => setActiveId(r.id)}
-                  className="w-full grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto_auto_auto] gap-3 items-center px-5 py-3 hover:bg-secondary/40 transition-base text-left"
+                  className="w-full grid grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)_auto_auto_auto_auto] gap-3 items-center px-5 py-3 hover:bg-secondary/40 transition-base text-left"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="h-9 w-9 rounded-md brand-soft-bg flex items-center justify-center text-primary shrink-0">
@@ -233,13 +236,32 @@ const Repositories = () => {
                       <div className="text-[11px] text-muted-foreground truncate">{r.url}</div>
                     </div>
                   </div>
+                  <div className="hidden md:flex items-center gap-2 min-w-0">
+                    {owner ? (
+                      <>
+                        <Avatar className="h-6 w-6 shrink-0">
+                          <AvatarFallback className="brand-gradient-bg text-[hsl(var(--on-brand))] text-[10px] font-semibold">
+                            {owner.initials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <div className="text-xs font-semibold truncate inline-flex items-center gap-1">
+                            <Crown className="h-2.5 w-2.5 text-primary" /> {owner.name}
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </div>
                   <div className="hidden md:block text-xs text-muted-foreground">{providerLabel[r.provider]}</div>
                   <div className="hidden md:block text-xs text-muted-foreground tabular-nums text-right">{r.branches.length}</div>
                   <div className="hidden md:block text-xs text-muted-foreground tabular-nums text-right">{r.members.length}</div>
                   <div className="text-right"><StatusPill status={r.status} /></div>
                 </button>
               </li>
-            ))}
+              );
+            })}
           </ul>
         </div>
       )}
