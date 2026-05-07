@@ -28,6 +28,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Check, ChevronsUpDown, GitBranch, Tag } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { EnvBadge } from "@/components/badges";
 import { cn } from "@/lib/utils";
@@ -185,14 +195,13 @@ export const CreatePackage = () => {
           <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 items-end">
             <div className="space-y-2">
               <Label>Base version</Label>
-              <Select value={baseVersion} onValueChange={setBaseVersion}>
-                <SelectTrigger><SelectValue placeholder="Select base" /></SelectTrigger>
-                <SelectContent>
-                  {versionOptions.map((v) => (
-                    <SelectItem key={`base-${v}`} value={v}>{v}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <VersionCombobox
+                value={baseVersion}
+                onChange={setBaseVersion}
+                tags={repo?.tags ?? []}
+                branches={repo?.branches ?? []}
+                placeholder="Select base"
+              />
               <p className="text-[11px] text-muted-foreground">Suggested: last deployed version</p>
             </div>
 
@@ -204,14 +213,13 @@ export const CreatePackage = () => {
 
             <div className="space-y-2">
               <Label>Target version</Label>
-              <Select value={targetVersion} onValueChange={setTargetVersion}>
-                <SelectTrigger><SelectValue placeholder="Select target" /></SelectTrigger>
-                <SelectContent>
-                  {versionOptions.map((v) => (
-                    <SelectItem key={`target-${v}`} value={v}>{v}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <VersionCombobox
+                value={targetVersion}
+                onChange={setTargetVersion}
+                tags={repo?.tags ?? []}
+                branches={repo?.branches ?? []}
+                placeholder="Select target"
+              />
               <p className="text-[11px] text-muted-foreground">Suggested: latest tag</p>
             </div>
           </div>
@@ -537,3 +545,81 @@ const MiniStat = ({ label, value, tone }: { label: string; value: number; tone: 
     <div className="text-[10px] uppercase tracking-wider opacity-80">{label}</div>
   </div>
 );
+
+const VersionCombobox = ({
+  value,
+  onChange,
+  tags,
+  branches,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  tags: string[];
+  branches: string[];
+  placeholder: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  const isTag = tags.includes(value);
+  const isBranch = branches.includes(value);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between font-normal"
+        >
+          <span className="flex items-center gap-2 truncate">
+            {isTag && <Tag className="h-3.5 w-3.5 text-muted-foreground" />}
+            {isBranch && <GitBranch className="h-3.5 w-3.5 text-muted-foreground" />}
+            <span className={cn("truncate", !value && "text-muted-foreground")}>
+              {value || placeholder}
+            </span>
+          </span>
+          <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Search versions..." />
+          <CommandList>
+            <CommandEmpty>No version found.</CommandEmpty>
+            {tags.length > 0 && (
+              <CommandGroup heading="Tags">
+                {tags.map((v) => (
+                  <CommandItem
+                    key={`tag-${v}`}
+                    value={v}
+                    onSelect={() => { onChange(v); setOpen(false); }}
+                  >
+                    <Tag className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="flex-1 truncate">{v}</span>
+                    {value === v && <Check className="h-4 w-4" />}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+            {branches.length > 0 && (
+              <CommandGroup heading="Branches">
+                {branches.map((v) => (
+                  <CommandItem
+                    key={`branch-${v}`}
+                    value={v}
+                    onSelect={() => { onChange(v); setOpen(false); }}
+                  >
+                    <GitBranch className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="flex-1 truncate">{v}</span>
+                    {value === v && <Check className="h-4 w-4" />}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
