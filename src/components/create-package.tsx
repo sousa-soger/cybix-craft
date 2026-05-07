@@ -195,14 +195,13 @@ export const CreatePackage = () => {
           <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 items-end">
             <div className="space-y-2">
               <Label>Base version</Label>
-              <Select value={baseVersion} onValueChange={setBaseVersion}>
-                <SelectTrigger><SelectValue placeholder="Select base" /></SelectTrigger>
-                <SelectContent>
-                  {versionOptions.map((v) => (
-                    <SelectItem key={`base-${v}`} value={v}>{v}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <VersionCombobox
+                value={baseVersion}
+                onChange={setBaseVersion}
+                tags={repo?.tags ?? []}
+                branches={repo?.branches ?? []}
+                placeholder="Select base"
+              />
               <p className="text-[11px] text-muted-foreground">Suggested: last deployed version</p>
             </div>
 
@@ -214,14 +213,13 @@ export const CreatePackage = () => {
 
             <div className="space-y-2">
               <Label>Target version</Label>
-              <Select value={targetVersion} onValueChange={setTargetVersion}>
-                <SelectTrigger><SelectValue placeholder="Select target" /></SelectTrigger>
-                <SelectContent>
-                  {versionOptions.map((v) => (
-                    <SelectItem key={`target-${v}`} value={v}>{v}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <VersionCombobox
+                value={targetVersion}
+                onChange={setTargetVersion}
+                tags={repo?.tags ?? []}
+                branches={repo?.branches ?? []}
+                placeholder="Select target"
+              />
               <p className="text-[11px] text-muted-foreground">Suggested: latest tag</p>
             </div>
           </div>
