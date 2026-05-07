@@ -15,8 +15,10 @@ import {
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ConnectRepositoryDialog } from "@/components/connect-repository-dialog";
 import { RepositoryDetailsSheet } from "@/components/repository-details-sheet";
+import { Crown } from "lucide-react";
 import {
   repositories as initialRepos,
   type Repository,
