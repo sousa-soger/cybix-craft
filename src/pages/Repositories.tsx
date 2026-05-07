@@ -146,7 +146,9 @@ const Repositories = () => {
       {/* Card view */}
       {view === "card" && filtered.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map((r) => (
+          {filtered.map((r) => {
+            const owner = r.members.find((m) => m.id === r.ownerId);
+            return (
             <button
               key={r.id}
               onClick={() => setActiveId(r.id)}
@@ -161,6 +163,21 @@ const Repositories = () => {
               </div>
               <div className="text-sm font-semibold font-mono truncate">{r.name}</div>
               <div className="text-[11px] text-muted-foreground mt-0.5">{providerLabel[r.provider]}</div>
+              {owner && (
+                <div className="mt-3 flex items-center gap-2 rounded-lg border border-border/60 bg-secondary/30 px-2 py-1.5">
+                  <Avatar className="h-6 w-6 shrink-0">
+                    <AvatarFallback className="brand-gradient-bg text-[hsl(var(--on-brand))] text-[10px] font-semibold">
+                      {owner.initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11px] font-semibold truncate inline-flex items-center gap-1">
+                      <Crown className="h-2.5 w-2.5 text-primary" /> {owner.name}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground truncate">Owner</div>
+                  </div>
+                </div>
+              )}
               <div className="mt-3 flex flex-wrap items-center gap-1.5">
                 <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-secondary/70 text-muted-foreground inline-flex items-center gap-1">
                   <GitBranch className="h-2.5 w-2.5" /> {r.branches.length} branches
@@ -174,7 +191,8 @@ const Repositories = () => {
               </div>
               <div className="mt-3 text-[11px] text-muted-foreground">default · {r.defaultBranch}</div>
             </button>
-          ))}
+            );
+          })}
           {/* Add tile */}
           <button
             onClick={() => setConnectOpen(true)}
