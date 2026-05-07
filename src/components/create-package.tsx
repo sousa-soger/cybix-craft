@@ -28,6 +28,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Check, ChevronsUpDown, GitBranch, Tag } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { EnvBadge } from "@/components/badges";
 import { cn } from "@/lib/utils";
