@@ -97,7 +97,6 @@ export const CreatePackage = () => {
   const [outputFormat, setOutputFormat] = useState<"ZIP" | "TAR.GZ" | "BOTH">("ZIP");
   const [generateRollback, setGenerateRollback] = useState(true);
   const [confirmedProd, setConfirmedProd] = useState(false);
-  const [flying, setFlying] = useState(false);
 
   const identical = baseVersion && targetVersion && baseVersion === targetVersion;
   const changeset = useMemo(
@@ -119,29 +118,23 @@ export const CreatePackage = () => {
     !!repo && !!baseVersion && !!targetVersion && !identical && (environment !== "PROD" || confirmedProd);
 
   const handleGenerate = () => {
-    if (!canSubmit || !repo || flying) return;
-    setFlying(true);
-    const repoSnap = repo;
-    const payload = {
+    if (!canSubmit || !repo) return;
+    enqueueJob({
       name: finalName,
-      repoId: repoSnap.id,
-      repoName: repoSnap.name,
+      repoId: repo.id,
+      repoName: repo.name,
       environment,
       baseVersion,
       targetVersion,
       generateRollback,
       outputFormat,
-    };
-    window.setTimeout(() => {
-      enqueueJob(payload);
-      toast({
-        title: "Added to queue",
-        description: `${payload.name} — you can keep working while it builds.`,
-      });
-      setCustomName("");
-      setConfirmedProd(false);
-      setFlying(false);
-    }, 700);
+    });
+    toast({
+      title: "Added to queue",
+      description: `${finalName} — you can keep working while it builds.`,
+    });
+    setCustomName("");
+    setConfirmedProd(false);
   };
 
   // ============= FORM =============
@@ -391,12 +384,7 @@ export const CreatePackage = () => {
 
       {/* RIGHT: Live summary */}
       <aside className="xl:sticky xl:top-20 xl:self-start space-y-5">
-        <div
-          className={cn(
-            "section-card p-6 origin-top-right",
-            flying && "animate-fly-to-queue pointer-events-none",
-          )}
-        >
+        <div className="section-card p-6">
           <div className="flex items-center gap-2 mb-4">
             <PackageIcon className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold">Live summary</h3>
