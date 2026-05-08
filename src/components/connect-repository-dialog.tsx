@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Github, GitlabIcon as Gitlab, HardDrive, Server, Check, Loader2, ShieldCheck, KeyRound, FolderGit2, ArrowLeft } from "lucide-react";
+import { Github, GitlabIcon as Gitlab, HardDrive, Server, Check, Loader2, ShieldCheck, KeyRound, ArrowLeft, Workflow, KeySquare, Upload } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +68,7 @@ export const ConnectRepositoryDialog = ({ open, onOpenChange }: ConnectRepositor
   const [token, setToken] = useState("");
   const [host, setHost] = useState("");
   const [localPath, setLocalPath] = useState("");
+  const [localMethod, setLocalMethod] = useState<"agent" | "ssh" | "upload">("agent");
 
   const reset = () => {
     setStep("provider");
@@ -252,12 +253,84 @@ export const ConnectRepositoryDialog = ({ open, onOpenChange }: ConnectRepositor
               )}
 
               {provider.authMethod === "path" && (
-                <div className="rounded-lg border border-border/70 p-3 bg-secondary/30 space-y-1">
-                  <div className="text-sm font-medium flex items-center gap-2">
-                    <FolderGit2 className="h-4 w-4 text-primary" /> Local agent detected
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    The Cybix agent is running on this machine. Continue to point at a folder.
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Choose how Cybix should connect to this local repository.
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {([
+                      {
+                        id: "agent" as const,
+                        name: "Cybix Agent",
+                        icon: <Workflow className="h-5 w-5" />,
+                        description:
+                          "Install our lightweight background app for automatic syncing of your local repository. Best for ongoing work.",
+                      },
+                      {
+                        id: "ssh" as const,
+                        name: "SSH Access",
+                        icon: <KeySquare className="h-5 w-5" />,
+                        description:
+                          "Give the server SSH access to pull directly from your machine. Requires a reachable host and a deploy key.",
+                      },
+                      {
+                        id: "upload" as const,
+                        name: "Upload Repository",
+                        icon: <Upload className="h-5 w-5" />,
+                        description:
+                          "Upload a ZIP archive or Git bundle of your local repository. Best for one-off builds.",
+                      },
+                    ]).map((opt) => {
+                      const active = localMethod === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setLocalMethod(opt.id)}
+                          className={cn(
+                            "group w-full text-left rounded-xl border bg-card p-3 transition-all duration-300 ease-out overflow-hidden",
+                            "hover:shadow-soft hover:border-primary/40",
+                            active ? "border-primary/60 shadow-soft brand-soft-bg" : "border-border/70",
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={cn(
+                                "h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                                active ? "brand-gradient-bg text-[hsl(var(--on-brand))]" : "brand-soft-bg text-primary",
+                              )}
+                            >
+                              {opt.icon}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-semibold">{opt.name}</div>
+                              <div className="text-[11px] text-muted-foreground">
+                                {active ? "Selected" : "Hover or select for details"}
+                              </div>
+                            </div>
+                            {active && (
+                              <div className="h-6 w-6 rounded-full bg-success/15 text-success flex items-center justify-center animate-scale-in">
+                                <Check className="h-3.5 w-3.5" />
+                              </div>
+                            )}
+                          </div>
+                          <div
+                            className={cn(
+                              "grid transition-all duration-300 ease-out",
+                              active
+                                ? "grid-rows-[1fr] opacity-100 mt-3"
+                                : "grid-rows-[0fr] opacity-0 group-hover:grid-rows-[1fr] group-hover:opacity-100 group-hover:mt-3",
+                            )}
+                          >
+                            <div className="overflow-hidden">
+                              <p className="text-xs text-muted-foreground leading-relaxed">
+                                {opt.description}
+                              </p>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
