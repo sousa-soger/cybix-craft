@@ -257,47 +257,105 @@ export const ConnectRepositoryDialog = ({ open, onOpenChange }: ConnectRepositor
                   <p className="text-sm text-muted-foreground">
                     Choose how Cybix should connect to this local repository.
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {([
+                  {(() => {
+                    const opts = [
                       {
                         id: "agent" as const,
                         name: "Cybix Agent",
                         icon: <Workflow className="h-5 w-5" />,
                         description:
-                          "Install our lightweight background app for automatic syncing of your local repository. Best for ongoing work.",
+                          "Install our lightweight background app for automatic syncing of your local repository. Best for ongoing work where you want changes to be picked up without any extra steps.",
                       },
                       {
                         id: "ssh" as const,
                         name: "SSH Access",
                         icon: <KeySquare className="h-5 w-5" />,
                         description:
-                          "Give the server SSH access to pull directly from your machine. Requires a reachable host and a deploy key.",
+                          "Give the server SSH access to pull directly from your machine. Requires a reachable host and a deploy key. Great when your machine is always-on and reachable.",
                       },
                       {
                         id: "upload" as const,
                         name: "Upload Repository",
                         icon: <Upload className="h-5 w-5" />,
                         description:
-                          "Upload a ZIP archive or Git bundle of your local repository. Best for one-off builds.",
+                          "Upload a ZIP archive or Git bundle of your local repository. Best for one-off builds or when no agent or SSH access is available.",
                       },
-                    ]).map((opt) => {
+                    ];
+                    return (
+                      <div className="sm:hidden space-y-2">
+                        {opts.map((opt) => {
+                          const active = localMethod === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => setLocalMethod(opt.id)}
+                              className={cn(
+                                "w-full text-left rounded-xl border bg-card p-4 transition-all",
+                                active ? "border-primary/60 brand-soft-bg" : "border-border/70",
+                              )}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-lg brand-soft-bg text-primary flex items-center justify-center">
+                                  {opt.icon}
+                                </div>
+                                <div className="text-sm font-semibold">{opt.name}</div>
+                                {active && <Check className="ml-auto h-4 w-4 text-success" />}
+                              </div>
+                              <p className="mt-2 text-xs text-muted-foreground leading-relaxed">{opt.description}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Desktop: hover expands card across full row width */}
+                  <div className="hidden sm:block relative h-32">
+                    {([
+                      {
+                        id: "agent" as const,
+                        name: "Cybix Agent",
+                        icon: <Workflow className="h-5 w-5" />,
+                        description:
+                          "Install our lightweight background app for automatic syncing of your local repository. Best for ongoing work where you want changes to be picked up without any extra steps.",
+                      },
+                      {
+                        id: "ssh" as const,
+                        name: "SSH Access",
+                        icon: <KeySquare className="h-5 w-5" />,
+                        description:
+                          "Give the server SSH access to pull directly from your machine. Requires a reachable host and a deploy key. Great when your machine is always-on and reachable.",
+                      },
+                      {
+                        id: "upload" as const,
+                        name: "Upload Repository",
+                        icon: <Upload className="h-5 w-5" />,
+                        description:
+                          "Upload a ZIP archive or Git bundle of your local repository. Best for one-off builds or when no agent or SSH access is available.",
+                      },
+                    ]).map((opt, i) => {
                       const active = localMethod === opt.id;
                       return (
                         <button
                           key={opt.id}
                           type="button"
                           onClick={() => setLocalMethod(opt.id)}
+                          style={{
+                            left: `calc(${i} * (33.3333% + 4px))`,
+                            width: "calc(33.3333% - 8px)",
+                          }}
                           className={cn(
-                            "group relative text-left rounded-xl border bg-card p-4 origin-center",
-                            "transition-all duration-300 ease-out will-change-transform",
-                            "hover:z-10 hover:scale-[1.06] hover:-translate-y-1 hover:shadow-glow hover:border-primary/50",
-                            "focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            "group absolute top-0 text-left rounded-xl border bg-card p-4 overflow-hidden",
+                            "transition-[left,width,box-shadow,border-color,background-color,transform] duration-300 ease-out",
+                            "hover:!left-0 hover:!w-full hover:z-20 hover:shadow-glow hover:border-primary/50 hover:-translate-y-0.5",
+                            "focus-visible:!left-0 focus-visible:!w-full focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                             active
                               ? "z-10 border-primary/60 shadow-soft brand-soft-bg"
                               : "border-border/70 shadow-sm",
                           )}
                         >
-                          <div className="flex items-start gap-3">
+                          <div className="flex items-center gap-3">
                             <div
                               className={cn(
                                 "h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-colors",
@@ -308,19 +366,19 @@ export const ConnectRepositoryDialog = ({ open, onOpenChange }: ConnectRepositor
                             >
                               {opt.icon}
                             </div>
+                            <div className="text-sm font-semibold truncate">{opt.name}</div>
                             {active && (
-                              <div className="ml-auto h-6 w-6 rounded-full bg-success/15 text-success flex items-center justify-center animate-scale-in">
+                              <div className="ml-auto h-6 w-6 rounded-full bg-success/15 text-success flex items-center justify-center animate-scale-in shrink-0">
                                 <Check className="h-3.5 w-3.5" />
                               </div>
                             )}
                           </div>
-                          <div className="mt-3 text-sm font-semibold">{opt.name}</div>
                           <div
                             className={cn(
                               "grid transition-all duration-300 ease-out",
-                              active
-                                ? "grid-rows-[1fr] opacity-100 mt-2"
-                                : "grid-rows-[0fr] opacity-0 group-hover:grid-rows-[1fr] group-hover:opacity-100 group-hover:mt-2",
+                              "grid-rows-[0fr] opacity-0 mt-0",
+                              "group-hover:grid-rows-[1fr] group-hover:opacity-100 group-hover:mt-3",
+                              "group-focus-visible:grid-rows-[1fr] group-focus-visible:opacity-100 group-focus-visible:mt-3",
                             )}
                           >
                             <div className="overflow-hidden">
