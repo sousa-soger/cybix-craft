@@ -68,6 +68,7 @@ export const ConnectRepositoryDialog = ({ open, onOpenChange }: ConnectRepositor
   const [token, setToken] = useState("");
   const [host, setHost] = useState("");
   const [localPath, setLocalPath] = useState("");
+  const [localMethod, setLocalMethod] = useState<"agent" | "ssh" | "upload">("agent");
 
   const reset = () => {
     setStep("provider");
