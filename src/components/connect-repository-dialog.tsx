@@ -257,7 +257,7 @@ export const ConnectRepositoryDialog = ({ open, onOpenChange }: ConnectRepositor
                   <p className="text-sm text-muted-foreground">
                     Choose how Cybix should connect to this local repository.
                   </p>
-                  <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {([
                       {
                         id: "agent" as const,
@@ -288,38 +288,39 @@ export const ConnectRepositoryDialog = ({ open, onOpenChange }: ConnectRepositor
                           type="button"
                           onClick={() => setLocalMethod(opt.id)}
                           className={cn(
-                            "group w-full text-left rounded-xl border bg-card p-3 transition-all duration-300 ease-out overflow-hidden",
-                            "hover:shadow-soft hover:border-primary/40",
-                            active ? "border-primary/60 shadow-soft brand-soft-bg" : "border-border/70",
+                            "group relative text-left rounded-xl border bg-card p-4 origin-center",
+                            "transition-all duration-300 ease-out will-change-transform",
+                            "hover:z-10 hover:scale-[1.06] hover:-translate-y-1 hover:shadow-glow hover:border-primary/50",
+                            "focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            active
+                              ? "z-10 border-primary/60 shadow-soft brand-soft-bg"
+                              : "border-border/70 shadow-sm",
                           )}
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-start gap-3">
                             <div
                               className={cn(
                                 "h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-                                active ? "brand-gradient-bg text-[hsl(var(--on-brand))]" : "brand-soft-bg text-primary",
+                                active
+                                  ? "brand-gradient-bg text-[hsl(var(--on-brand))]"
+                                  : "brand-soft-bg text-primary group-hover:brand-gradient-bg group-hover:text-[hsl(var(--on-brand))]",
                               )}
                             >
                               {opt.icon}
                             </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="text-sm font-semibold">{opt.name}</div>
-                              <div className="text-[11px] text-muted-foreground">
-                                {active ? "Selected" : "Hover or select for details"}
-                              </div>
-                            </div>
                             {active && (
-                              <div className="h-6 w-6 rounded-full bg-success/15 text-success flex items-center justify-center animate-scale-in">
+                              <div className="ml-auto h-6 w-6 rounded-full bg-success/15 text-success flex items-center justify-center animate-scale-in">
                                 <Check className="h-3.5 w-3.5" />
                               </div>
                             )}
                           </div>
+                          <div className="mt-3 text-sm font-semibold">{opt.name}</div>
                           <div
                             className={cn(
                               "grid transition-all duration-300 ease-out",
                               active
-                                ? "grid-rows-[1fr] opacity-100 mt-3"
-                                : "grid-rows-[0fr] opacity-0 group-hover:grid-rows-[1fr] group-hover:opacity-100 group-hover:mt-3",
+                                ? "grid-rows-[1fr] opacity-100 mt-2"
+                                : "grid-rows-[0fr] opacity-0 group-hover:grid-rows-[1fr] group-hover:opacity-100 group-hover:mt-2",
                             )}
                           >
                             <div className="overflow-hidden">
