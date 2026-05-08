@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Github, GitlabIcon as Gitlab, HardDrive, Server, Check, Loader2, ShieldCheck, KeyRound, FolderGit2, ArrowLeft } from "lucide-react";
+import { Github, GitlabIcon as Gitlab, HardDrive, Server, Check, Loader2, ShieldCheck, KeyRound, ArrowLeft, Workflow, KeySquare, Upload } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
