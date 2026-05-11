@@ -205,7 +205,7 @@ const RepoGroup = ({
   return (
     <Collapsible
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={onOpenChange}
       className="section-card overflow-hidden p-0"
     >
       <CollapsibleTrigger className="w-full">
