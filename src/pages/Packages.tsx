@@ -45,6 +45,7 @@ const Packages = () => {
   const [query, setQuery] = useState("");
   const [repoFilter, setRepoFilter] = useState<string>("all");
   const [creatorFilter, setCreatorFilter] = useState<string>("all");
+  const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
 
   const creators = useMemo(
     () => Array.from(new Set(packages.map((p) => p.createdBy))).sort(),
