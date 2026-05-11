@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ChevronDown,
+  ChevronsDownUp,
+  ChevronsUpDown,
   Download,
   GitBranch,
   PackagePlus,
