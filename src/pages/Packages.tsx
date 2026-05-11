@@ -191,11 +191,14 @@ const Packages = () => {
 const RepoGroup = ({
   repo,
   items,
+  open,
+  onOpenChange,
 }: {
   repo: (typeof repositories)[number];
   items: PackageItem[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) => {
-  const [open, setOpen] = useState(true);
   const owner = repo.members.find((m) => m.id === repo.ownerId);
   const uniqueCreators = Array.from(new Set(items.map((i) => i.createdBy)));
 
