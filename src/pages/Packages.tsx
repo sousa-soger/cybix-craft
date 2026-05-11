@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ChevronDown,
+  ChevronsDownUp,
+  ChevronsUpDown,
   Download,
   GitBranch,
   PackagePlus,
@@ -43,6 +45,7 @@ const Packages = () => {
   const [query, setQuery] = useState("");
   const [repoFilter, setRepoFilter] = useState<string>("all");
   const [creatorFilter, setCreatorFilter] = useState<string>("all");
+  const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
 
   const creators = useMemo(
     () => Array.from(new Set(packages.map((p) => p.createdBy))).sort(),
@@ -135,11 +138,51 @@ const Packages = () => {
           No packages match the current filters.
         </div>
       ) : (
-        <div className="space-y-3">
-          {grouped.map(({ repo, items }) => (
-            <RepoGroup key={repo.id} repo={repo} items={items} />
-          ))}
-        </div>
+        <>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs text-muted-foreground">
+              {grouped.length} {grouped.length === 1 ? "repository" : "repositories"} ·{" "}
+              {filtered.length} {filtered.length === 1 ? "package" : "packages"}
+            </div>
+            {(() => {
+              const allOpen = grouped.every(({ repo }) => openMap[repo.id] ?? true);
+              return (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    const next: Record<string, boolean> = {};
+                    for (const { repo } of grouped) next[repo.id] = !allOpen;
+                    setOpenMap((prev) => ({ ...prev, ...next }));
+                  }}
+                >
+                  {allOpen ? (
+                    <>
+                      <ChevronsDownUp className="h-3.5 w-3.5" /> Collapse all
+                    </>
+                  ) : (
+                    <>
+                      <ChevronsUpDown className="h-3.5 w-3.5" /> Expand all
+                    </>
+                  )}
+                </Button>
+              );
+            })()}
+          </div>
+          <div className="space-y-3">
+            {grouped.map(({ repo, items }) => (
+              <RepoGroup
+                key={repo.id}
+                repo={repo}
+                items={items}
+                open={openMap[repo.id] ?? true}
+                onOpenChange={(o) =>
+                  setOpenMap((prev) => ({ ...prev, [repo.id]: o }))
+                }
+              />
+            ))}
+          </div>
+        </>
       )}
     </AppShell>
   );
@@ -148,18 +191,21 @@ const Packages = () => {
 const RepoGroup = ({
   repo,
   items,
+  open,
+  onOpenChange,
 }: {
   repo: (typeof repositories)[number];
   items: PackageItem[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) => {
-  const [open, setOpen] = useState(true);
   const owner = repo.members.find((m) => m.id === repo.ownerId);
   const uniqueCreators = Array.from(new Set(items.map((i) => i.createdBy)));
 
   return (
     <Collapsible
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={onOpenChange}
       className="section-card overflow-hidden p-0"
     >
       <CollapsibleTrigger className="w-full">
