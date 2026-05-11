@@ -406,8 +406,68 @@ export const ConnectRepositoryDialog = ({ open, onOpenChange }: ConnectRepositor
                       htmlFor="repo-drop-zone"
                       className="group relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border/70 bg-secondary/30 px-6 py-10 text-center cursor-pointer transition-all hover:border-primary/60 hover:bg-secondary/50"
                     >
-                      <div className="h-16 w-16 rounded-xl brand-soft-bg flex items-center justify-center text-primary transition-transform group-hover:scale-105">
-                        <Upload className="h-8 w-8" />
+                      <div className="transition-transform group-hover:scale-105">
+                        <svg
+                          width="120"
+                          height="96"
+                          viewBox="0 0 120 96"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          aria-hidden="true"
+                        >
+                          <defs>
+                            <linearGradient id="dropzone-grad" x1="0" y1="0" x2="120" y2="96" gradientUnits="userSpaceOnUse">
+                              <stop offset="0%" stopColor="hsl(var(--primary))" />
+                              <stop offset="100%" stopColor="hsl(var(--primary-glow, var(--primary)))" stopOpacity="0.7" />
+                            </linearGradient>
+                          </defs>
+                          {/* Folder (behind) */}
+                          <path
+                            d="M6 24 L6 78 Q6 84 12 84 L70 84 Q76 84 76 78 L76 32 Q76 26 70 26 L40 26 L32 18 L12 18 Q6 18 6 24 Z"
+                            stroke="url(#dropzone-grad)"
+                            strokeWidth="2.5"
+                            strokeLinejoin="round"
+                            fill="none"
+                          />
+                          {/* ZIP file (front) */}
+                          <path
+                            d="M58 14 L100 14 L114 28 L114 86 Q114 90 110 90 L58 90 Q54 90 54 86 L54 18 Q54 14 58 14 Z"
+                            stroke="url(#dropzone-grad)"
+                            strokeWidth="2.5"
+                            strokeLinejoin="round"
+                            fill="hsl(var(--card))"
+                          />
+                          {/* Folded corner */}
+                          <path
+                            d="M100 14 L100 28 L114 28"
+                            stroke="url(#dropzone-grad)"
+                            strokeWidth="2.5"
+                            strokeLinejoin="round"
+                            fill="none"
+                          />
+                          {/* ZIP label */}
+                          <text
+                            x="84"
+                            y="78"
+                            textAnchor="middle"
+                            fontSize="11"
+                            fontWeight="700"
+                            fontFamily="ui-sans-serif, system-ui, sans-serif"
+                            fill="url(#dropzone-grad)"
+                            letterSpacing="0.5"
+                          >
+                            ZIP
+                          </text>
+                          {/* Upward arrow */}
+                          <path
+                            d="M84 62 L84 44 M76 52 L84 44 L92 52"
+                            stroke="url(#dropzone-grad)"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            fill="none"
+                          />
+                        </svg>
                       </div>
                       <div className="space-y-1">
                         <div className="text-base font-semibold">Drag &amp; Drop your project</div>
