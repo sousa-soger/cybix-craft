@@ -400,14 +400,56 @@ export const ConnectRepositoryDialog = ({ open, onOpenChange }: ConnectRepositor
             <div className="space-y-4">
 
               {provider.authMethod === "path" ? (
-                <div className="space-y-2">
-                  <Label>Local folder path</Label>
-                  <Input
-                    placeholder="/Users/you/code/my-app"
-                    value={localPath}
-                    onChange={(e) => setLocalPath(e.target.value)}
-                  />
-                </div>
+                (localMethod === "upload" || localMethod === "agent") ? (
+                  <div className="space-y-3">
+                    <label
+                      htmlFor="repo-drop-zone"
+                      className="group relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border/70 bg-secondary/30 px-6 py-10 text-center cursor-pointer transition-all hover:border-primary/60 hover:bg-secondary/50"
+                    >
+                      <div className="h-16 w-16 rounded-xl brand-soft-bg flex items-center justify-center text-primary transition-transform group-hover:scale-105">
+                        <Upload className="h-8 w-8" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-base font-semibold">Drag &amp; Drop your project</div>
+                        <p className="text-xs text-muted-foreground max-w-sm">
+                          Simply drop your project folder or archive file. Accepts both local directories and ZIP files.
+                        </p>
+                        <p className="text-xs text-muted-foreground">Supports automatic processing</p>
+                      </div>
+                      <input
+                        id="repo-drop-zone"
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) setLocalPath(f.name);
+                        }}
+                      />
+                    </label>
+                    {localPath && (
+                      <p className="text-xs text-muted-foreground">
+                        Selected: <span className="font-mono text-foreground">{localPath}</span>
+                      </p>
+                    )}
+                    <div className="space-y-2">
+                      <Label>Repository name</Label>
+                      <Input
+                        placeholder="e.g. my-project"
+                        value={repoUrl}
+                        onChange={(e) => setRepoUrl(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label>Local folder path</Label>
+                    <Input
+                      placeholder="/Users/you/code/my-app"
+                      value={localPath}
+                      onChange={(e) => setLocalPath(e.target.value)}
+                    />
+                  </div>
+                )
               ) : (
                 <div className="space-y-2">
                   <Label>Repository URL</Label>
