@@ -138,11 +138,51 @@ const Packages = () => {
           No packages match the current filters.
         </div>
       ) : (
-        <div className="space-y-3">
-          {grouped.map(({ repo, items }) => (
-            <RepoGroup key={repo.id} repo={repo} items={items} />
-          ))}
-        </div>
+        <>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs text-muted-foreground">
+              {grouped.length} {grouped.length === 1 ? "repository" : "repositories"} ·{" "}
+              {filtered.length} {filtered.length === 1 ? "package" : "packages"}
+            </div>
+            {(() => {
+              const allOpen = grouped.every(({ repo }) => openMap[repo.id] ?? true);
+              return (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    const next: Record<string, boolean> = {};
+                    for (const { repo } of grouped) next[repo.id] = !allOpen;
+                    setOpenMap((prev) => ({ ...prev, ...next }));
+                  }}
+                >
+                  {allOpen ? (
+                    <>
+                      <ChevronsDownUp className="h-3.5 w-3.5" /> Collapse all
+                    </>
+                  ) : (
+                    <>
+                      <ChevronsUpDown className="h-3.5 w-3.5" /> Expand all
+                    </>
+                  )}
+                </Button>
+              );
+            })()}
+          </div>
+          <div className="space-y-3">
+            {grouped.map(({ repo, items }) => (
+              <RepoGroup
+                key={repo.id}
+                repo={repo}
+                items={items}
+                open={openMap[repo.id] ?? true}
+                onOpenChange={(o) =>
+                  setOpenMap((prev) => ({ ...prev, [repo.id]: o }))
+                }
+              />
+            ))}
+          </div>
+        </>
       )}
     </AppShell>
   );
