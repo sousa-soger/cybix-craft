@@ -185,6 +185,48 @@ export const CreatePackage = () => {
     <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
       {/* LEFT: Sections */}
       <div className="space-y-5">
+        {/* SOURCE MODE TOGGLE */}
+        <div className="section-card p-2">
+          <div className="grid grid-cols-2 gap-1.5 rounded-lg bg-secondary/50 p-1">
+            <button
+              type="button"
+              onClick={() => setSourceMode("repo")}
+              className={cn(
+                "flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-all",
+                sourceMode === "repo"
+                  ? "bg-card shadow-soft text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <GitBranchIcon className="h-4 w-4" />
+              Registered repository
+            </button>
+            <button
+              type="button"
+              onClick={() => setSourceMode("gitless")}
+              className={cn(
+                "flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-all",
+                sourceMode === "gitless"
+                  ? "bg-card shadow-soft text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <FolderOpen className="h-4 w-4" />
+              Gitless folders
+              <span className="ml-1 rounded-full brand-soft-bg px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                One-time
+              </span>
+            </button>
+          </div>
+          <p className="mt-2 px-2 pb-1 text-[11px] text-muted-foreground">
+            {sourceMode === "repo"
+              ? "Use a connected repository's branches or tags as base and target."
+              : "Drag & drop two project folders — no git history needed. Great for one-off comparisons."}
+          </p>
+        </div>
+
+        {sourceMode === "repo" && (
+        <>
         {/* SECTION 1 — Repository */}
         <SectionCard
           step={1}
