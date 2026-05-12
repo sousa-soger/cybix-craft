@@ -8,13 +8,17 @@ import {
   FileMinus,
   FilePlus2,
   FilePenLine,
+  FolderOpen,
   Github,
+  GitBranch as GitBranchIcon,
   GitlabIcon as Gitlab,
   HardDrive,
   Package as PackageIcon,
   Server as ServerIcon,
   ShieldAlert,
   Sparkles,
+  Upload,
+  X,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -70,8 +74,18 @@ const providerLabel: Record<RepoProvider, string> = {
   "local-pc": "Local PC",
 };
 
+type SourceMode = "repo" | "gitless";
+
+interface FolderDrop {
+  name: string;
+  fileCount: number;
+  sizeMB: number;
+}
+
 export const CreatePackage = () => {
   const { toast } = useToast();
+
+  const [sourceMode, setSourceMode] = useState<SourceMode>("repo");
 
   const [repoId, setRepoId] = useState<string>(repositories[0]?.id ?? "");
   const repo = repositories.find((r) => r.id === repoId);
@@ -83,6 +97,10 @@ export const CreatePackage = () => {
 
   const [baseVersion, setBaseVersion] = useState<string>(repo?.tags[1] ?? "");
   const [targetVersion, setTargetVersion] = useState<string>(repo?.tags[0] ?? "");
+
+  // Gitless folder state
+  const [baseFolder, setBaseFolder] = useState<FolderDrop | null>(null);
+  const [targetFolder, setTargetFolder] = useState<FolderDrop | null>(null);
 
   useEffect(() => {
     if (repo) {
@@ -98,37 +116,62 @@ export const CreatePackage = () => {
   const [generateRollback, setGenerateRollback] = useState(true);
   const [confirmedProd, setConfirmedProd] = useState(false);
 
-  const identical = baseVersion && targetVersion && baseVersion === targetVersion;
-  const changeset = useMemo(
-    () => (identical ? null : mockChangeset(baseVersion, targetVersion)),
-    [baseVersion, targetVersion, identical],
-  );
+  const identical =
+    sourceMode === "repo"
+      ? !!baseVersion && !!targetVersion && baseVersion === targetVersion
+      : !!baseFolder && !!targetFolder && baseFolder.name === targetFolder.name;
+
+  const changeset = useMemo(() => {
+    if (identical) return null;
+    if (sourceMode === "repo") return mockChangeset(baseVersion, targetVersion);
+    if (baseFolder && targetFolder) return mockChangeset(baseFolder.name, targetFolder.name);
+    return null;
+  }, [sourceMode, baseVersion, targetVersion, baseFolder, targetFolder, identical]);
 
   const autoName = useMemo(() => {
-    if (!repo || !baseVersion || !targetVersion) return "";
     const sanitize = (s: string) => s.replace(/[^a-zA-Z0-9.-]/g, "-");
     const ts = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "").slice(0, 12);
-    const projShort = repo.name.split("/").pop() ?? "project";
-    return `${environment}-${projShort}-${sanitize(baseVersion)}-to-${sanitize(targetVersion)}-${ts}`;
-  }, [repo, baseVersion, targetVersion, environment]);
+    if (sourceMode === "repo") {
+      if (!repo || !baseVersion || !targetVersion) return "";
+      const projShort = repo.name.split("/").pop() ?? "project";
+      return `${environment}-${projShort}-${sanitize(baseVersion)}-to-${sanitize(targetVersion)}-${ts}`;
+    }
+    if (!baseFolder || !targetFolder) return "";
+    return `${environment}-gitless-${sanitize(baseFolder.name)}-to-${sanitize(targetFolder.name)}-${ts}`;
+  }, [sourceMode, repo, baseVersion, targetVersion, baseFolder, targetFolder, environment]);
 
   const finalName = customName.trim() || autoName;
 
   const canSubmit =
-    !!repo && !!baseVersion && !!targetVersion && !identical && (environment !== "PROD" || confirmedProd);
+    sourceMode === "repo"
+      ? !!repo && !!baseVersion && !!targetVersion && !identical && (environment !== "PROD" || confirmedProd)
+      : !!baseFolder && !!targetFolder && !identical && (environment !== "PROD" || confirmedProd);
 
   const handleGenerate = () => {
-    if (!canSubmit || !repo) return;
-    enqueueJob({
-      name: finalName,
-      repoId: repo.id,
-      repoName: repo.name,
-      environment,
-      baseVersion,
-      targetVersion,
-      generateRollback,
-      outputFormat,
-    });
+    if (!canSubmit) return;
+    if (sourceMode === "repo" && repo) {
+      enqueueJob({
+        name: finalName,
+        repoId: repo.id,
+        repoName: repo.name,
+        environment,
+        baseVersion,
+        targetVersion,
+        generateRollback,
+        outputFormat,
+      });
+    } else if (sourceMode === "gitless" && baseFolder && targetFolder) {
+      enqueueJob({
+        name: finalName,
+        repoId: "gitless",
+        repoName: `Gitless · ${baseFolder.name} → ${targetFolder.name}`,
+        environment,
+        baseVersion: baseFolder.name,
+        targetVersion: targetFolder.name,
+        generateRollback,
+        outputFormat,
+      });
+    }
     toast({
       title: "Added to queue",
       description: `${finalName} — you can keep working while it builds.`,
@@ -142,6 +185,48 @@ export const CreatePackage = () => {
     <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6">
       {/* LEFT: Sections */}
       <div className="space-y-5">
+        {/* SOURCE MODE TOGGLE */}
+        <div className="section-card p-2">
+          <div className="grid grid-cols-2 gap-1.5 rounded-lg bg-secondary/50 p-1">
+            <button
+              type="button"
+              onClick={() => setSourceMode("repo")}
+              className={cn(
+                "flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-all",
+                sourceMode === "repo"
+                  ? "bg-card shadow-soft text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <GitBranchIcon className="h-4 w-4" />
+              Registered repository
+            </button>
+            <button
+              type="button"
+              onClick={() => setSourceMode("gitless")}
+              className={cn(
+                "flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium transition-all",
+                sourceMode === "gitless"
+                  ? "bg-card shadow-soft text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <FolderOpen className="h-4 w-4" />
+              Gitless folders
+              <span className="ml-1 rounded-full brand-soft-bg px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                One-time
+              </span>
+            </button>
+          </div>
+          <p className="mt-2 px-2 pb-1 text-[11px] text-muted-foreground">
+            {sourceMode === "repo"
+              ? "Use a connected repository's branches or tags as base and target."
+              : "Drag & drop two project folders — no git history needed. Great for one-off comparisons."}
+          </p>
+        </div>
+
+        {sourceMode === "repo" && (
+        <>
         {/* SECTION 1 — Repository */}
         <SectionCard
           step={1}
@@ -266,10 +351,56 @@ export const CreatePackage = () => {
             </div>
           )}
         </SectionCard>
+        </>
+        )}
+
+        {sourceMode === "gitless" && (
+          <SectionCard
+            step={1}
+            title="Project folders"
+            subtitle="Drag & drop the base and target folders. We'll diff them locally — no git required."
+          >
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 items-stretch">
+              <FolderDropzone label="Base folder" hint="Older / current version" tone="base" value={baseFolder} onChange={setBaseFolder} />
+              <div className="hidden md:flex items-center justify-center">
+                <div className="h-9 w-9 rounded-full brand-soft-bg flex items-center justify-center">
+                  <ArrowRight className="h-4 w-4 text-primary" />
+                </div>
+              </div>
+              <FolderDropzone label="Target folder" hint="Newer version to ship" tone="target" value={targetFolder} onChange={setTargetFolder} />
+            </div>
+
+            {identical && (
+              <div className="mt-4 flex items-start gap-2 rounded-lg border border-failed/30 bg-failed/8 p-3 text-sm text-failed">
+                <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
+                <span>Base and target folders cannot have the same name. Pick two different folders.</span>
+              </div>
+            )}
+
+            {changeset && (
+              <div className="mt-5 animate-fade-in">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    Detected changes
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    ~{changeset.estimatedSizeMB} MB · {changeset.added.length + changeset.modified.length + changeset.deleted.length} files
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <ChangeStat icon={<FilePlus2 className="h-4 w-4" />} label="Added" value={changeset.added.length} tone="success" />
+                  <ChangeStat icon={<FilePenLine className="h-4 w-4" />} label="Modified" value={changeset.modified.length} tone="running" />
+                  <ChangeStat icon={<FileMinus className="h-4 w-4" />} label="Deleted" value={changeset.deleted.length} tone="failed" />
+                </div>
+              </div>
+            )}
+          </SectionCard>
+        )}
 
         {/* SECTION 3 — Environment & Package */}
         <SectionCard
-          step={3}
+          step={sourceMode === "gitless" ? 2 : 3}
           title="Environment & Package Settings"
           subtitle="Where will this package be applied?"
         >
@@ -392,13 +523,29 @@ export const CreatePackage = () => {
 
           <div className="space-y-3 text-sm">
             
+            {sourceMode === "repo" ? (
+              <SummaryRow
+                label="Repository"
+                value={repo?.name ?? "—"}
+                icon={repo ? providerIcon(repo.provider) : undefined}
+              />
+            ) : (
+              <SummaryRow
+                label="Source"
+                value="Gitless folders"
+                icon={<FolderOpen className="h-3.5 w-3.5" />}
+              />
+            )}
             <SummaryRow
-              label="Repository"
-              value={repo?.name ?? "—"}
-              icon={repo ? providerIcon(repo.provider) : undefined}
+              label="Base"
+              value={sourceMode === "repo" ? (baseVersion || "—") : (baseFolder?.name || "—")}
+              mono
             />
-            <SummaryRow label="Base" value={baseVersion || "—"} mono />
-            <SummaryRow label="Target" value={targetVersion || "—"} mono />
+            <SummaryRow
+              label="Target"
+              value={sourceMode === "repo" ? (targetVersion || "—") : (targetFolder?.name || "—")}
+              mono
+            />
             <SummaryRow
               label="Environment"
               value={<EnvBadge env={environment} />}
@@ -623,3 +770,124 @@ const VersionCombobox = ({
     </Popover>
   );
 };
+
+const FolderDropzone = ({
+  label,
+  hint,
+  tone,
+  value,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  tone: "base" | "target";
+  value: FolderDrop | null;
+  onChange: (v: FolderDrop | null) => void;
+}) => {
+  const [dragOver, setDragOver] = useState(false);
+  const inputId = `gitless-${tone}-${label.replace(/\s+/g, "-")}`;
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const arr = Array.from(files);
+    // Try to derive a folder name from webkitRelativePath
+    const first = arr[0] as File & { webkitRelativePath?: string };
+    let name = first.webkitRelativePath?.split("/")[0] ?? first.name;
+    if (arr.length === 1 && /\.(zip|tar|gz|tgz)$/i.test(first.name)) {
+      name = first.name;
+    }
+    const totalBytes = arr.reduce((acc, f) => acc + f.size, 0);
+    onChange({
+      name,
+      fileCount: arr.length,
+      sizeMB: +(totalBytes / (1024 * 1024)).toFixed(2),
+    });
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs font-medium">{label}</Label>
+        <span className="text-[10px] text-muted-foreground">{hint}</span>
+      </div>
+
+      {value ? (
+        <div
+          className={cn(
+            "rounded-xl border p-4 transition-base animate-fade-in",
+            tone === "base"
+              ? "border-running/40 bg-running/8"
+              : "border-success/40 bg-success/8",
+          )}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className={cn(
+                "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+                tone === "base" ? "bg-running/15 text-running" : "bg-success/15 text-success",
+              )}
+            >
+              <FolderOpen className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-semibold truncate" title={value.name}>
+                {value.name}
+              </div>
+              <div className="mt-0.5 text-[11px] text-muted-foreground">
+                {value.fileCount.toLocaleString()} file{value.fileCount === 1 ? "" : "s"} · {value.sizeMB} MB
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => onChange(null)}
+              className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground transition-base"
+              aria-label="Remove folder"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <label
+          htmlFor={inputId}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOver(false);
+            handleFiles(e.dataTransfer.files);
+          }}
+          className={cn(
+            "flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition-base min-h-[140px]",
+            dragOver
+              ? "border-primary bg-primary/5 scale-[1.01]"
+              : "border-border/70 bg-secondary/30 hover:border-primary/40 hover:bg-secondary/50",
+          )}
+        >
+          <div
+            className={cn(
+              "flex h-11 w-11 items-center justify-center rounded-lg transition-base",
+              tone === "base" ? "bg-running/10 text-running" : "bg-success/10 text-success",
+              dragOver && "scale-110",
+            )}
+          >
+            <Upload className="h-5 w-5" />
+          </div>
+          <div className="text-sm font-medium">Drop {tone} folder or .zip</div>
+          <div className="text-[11px] text-muted-foreground">or click to browse</div>
+          <input
+            id={inputId}
+            type="file"
+            className="hidden"
+            multiple
+            // @ts-expect-error - non-standard but supported by Chromium/Firefox
+            webkitdirectory=""
+            directory=""
+            onChange={(e) => handleFiles(e.target.files)}
+          />
+        </label>
+      )}
+    </div>
+  );
+};
+
