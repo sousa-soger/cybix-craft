@@ -770,3 +770,124 @@ const VersionCombobox = ({
     </Popover>
   );
 };
+
+const FolderDropzone = ({
+  label,
+  hint,
+  tone,
+  value,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  tone: "base" | "target";
+  value: FolderDrop | null;
+  onChange: (v: FolderDrop | null) => void;
+}) => {
+  const [dragOver, setDragOver] = useState(false);
+  const inputId = `gitless-${tone}-${label.replace(/\s+/g, "-")}`;
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const arr = Array.from(files);
+    // Try to derive a folder name from webkitRelativePath
+    const first = arr[0] as File & { webkitRelativePath?: string };
+    let name = first.webkitRelativePath?.split("/")[0] ?? first.name;
+    if (arr.length === 1 && /\.(zip|tar|gz|tgz)$/i.test(first.name)) {
+      name = first.name;
+    }
+    const totalBytes = arr.reduce((acc, f) => acc + f.size, 0);
+    onChange({
+      name,
+      fileCount: arr.length,
+      sizeMB: +(totalBytes / (1024 * 1024)).toFixed(2),
+    });
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs font-medium">{label}</Label>
+        <span className="text-[10px] text-muted-foreground">{hint}</span>
+      </div>
+
+      {value ? (
+        <div
+          className={cn(
+            "rounded-xl border p-4 transition-base animate-fade-in",
+            tone === "base"
+              ? "border-running/40 bg-running/8"
+              : "border-success/40 bg-success/8",
+          )}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className={cn(
+                "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+                tone === "base" ? "bg-running/15 text-running" : "bg-success/15 text-success",
+              )}
+            >
+              <FolderOpen className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-semibold truncate" title={value.name}>
+                {value.name}
+              </div>
+              <div className="mt-0.5 text-[11px] text-muted-foreground">
+                {value.fileCount.toLocaleString()} file{value.fileCount === 1 ? "" : "s"} · {value.sizeMB} MB
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => onChange(null)}
+              className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground transition-base"
+              aria-label="Remove folder"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <label
+          htmlFor={inputId}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOver(false);
+            handleFiles(e.dataTransfer.files);
+          }}
+          className={cn(
+            "flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition-base min-h-[140px]",
+            dragOver
+              ? "border-primary bg-primary/5 scale-[1.01]"
+              : "border-border/70 bg-secondary/30 hover:border-primary/40 hover:bg-secondary/50",
+          )}
+        >
+          <div
+            className={cn(
+              "flex h-11 w-11 items-center justify-center rounded-lg transition-base",
+              tone === "base" ? "bg-running/10 text-running" : "bg-success/10 text-success",
+              dragOver && "scale-110",
+            )}
+          >
+            <Upload className="h-5 w-5" />
+          </div>
+          <div className="text-sm font-medium">Drop {tone} folder or .zip</div>
+          <div className="text-[11px] text-muted-foreground">or click to browse</div>
+          <input
+            id={inputId}
+            type="file"
+            className="hidden"
+            multiple
+            // @ts-expect-error - non-standard but supported by Chromium/Firefox
+            webkitdirectory=""
+            directory=""
+            onChange={(e) => handleFiles(e.target.files)}
+          />
+        </label>
+      )}
+    </div>
+  );
+};
+
