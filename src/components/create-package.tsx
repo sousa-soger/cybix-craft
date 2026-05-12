@@ -74,8 +74,18 @@ const providerLabel: Record<RepoProvider, string> = {
   "local-pc": "Local PC",
 };
 
+type SourceMode = "repo" | "gitless";
+
+interface FolderDrop {
+  name: string;
+  fileCount: number;
+  sizeMB: number;
+}
+
 export const CreatePackage = () => {
   const { toast } = useToast();
+
+  const [sourceMode, setSourceMode] = useState<SourceMode>("repo");
 
   const [repoId, setRepoId] = useState<string>(repositories[0]?.id ?? "");
   const repo = repositories.find((r) => r.id === repoId);
@@ -87,6 +97,10 @@ export const CreatePackage = () => {
 
   const [baseVersion, setBaseVersion] = useState<string>(repo?.tags[1] ?? "");
   const [targetVersion, setTargetVersion] = useState<string>(repo?.tags[0] ?? "");
+
+  // Gitless folder state
+  const [baseFolder, setBaseFolder] = useState<FolderDrop | null>(null);
+  const [targetFolder, setTargetFolder] = useState<FolderDrop | null>(null);
 
   useEffect(() => {
     if (repo) {
@@ -102,37 +116,62 @@ export const CreatePackage = () => {
   const [generateRollback, setGenerateRollback] = useState(true);
   const [confirmedProd, setConfirmedProd] = useState(false);
 
-  const identical = baseVersion && targetVersion && baseVersion === targetVersion;
-  const changeset = useMemo(
-    () => (identical ? null : mockChangeset(baseVersion, targetVersion)),
-    [baseVersion, targetVersion, identical],
-  );
+  const identical =
+    sourceMode === "repo"
+      ? !!baseVersion && !!targetVersion && baseVersion === targetVersion
+      : !!baseFolder && !!targetFolder && baseFolder.name === targetFolder.name;
+
+  const changeset = useMemo(() => {
+    if (identical) return null;
+    if (sourceMode === "repo") return mockChangeset(baseVersion, targetVersion);
+    if (baseFolder && targetFolder) return mockChangeset(baseFolder.name, targetFolder.name);
+    return null;
+  }, [sourceMode, baseVersion, targetVersion, baseFolder, targetFolder, identical]);
 
   const autoName = useMemo(() => {
-    if (!repo || !baseVersion || !targetVersion) return "";
     const sanitize = (s: string) => s.replace(/[^a-zA-Z0-9.-]/g, "-");
     const ts = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "").slice(0, 12);
-    const projShort = repo.name.split("/").pop() ?? "project";
-    return `${environment}-${projShort}-${sanitize(baseVersion)}-to-${sanitize(targetVersion)}-${ts}`;
-  }, [repo, baseVersion, targetVersion, environment]);
+    if (sourceMode === "repo") {
+      if (!repo || !baseVersion || !targetVersion) return "";
+      const projShort = repo.name.split("/").pop() ?? "project";
+      return `${environment}-${projShort}-${sanitize(baseVersion)}-to-${sanitize(targetVersion)}-${ts}`;
+    }
+    if (!baseFolder || !targetFolder) return "";
+    return `${environment}-gitless-${sanitize(baseFolder.name)}-to-${sanitize(targetFolder.name)}-${ts}`;
+  }, [sourceMode, repo, baseVersion, targetVersion, baseFolder, targetFolder, environment]);
 
   const finalName = customName.trim() || autoName;
 
   const canSubmit =
-    !!repo && !!baseVersion && !!targetVersion && !identical && (environment !== "PROD" || confirmedProd);
+    sourceMode === "repo"
+      ? !!repo && !!baseVersion && !!targetVersion && !identical && (environment !== "PROD" || confirmedProd)
+      : !!baseFolder && !!targetFolder && !identical && (environment !== "PROD" || confirmedProd);
 
   const handleGenerate = () => {
-    if (!canSubmit || !repo) return;
-    enqueueJob({
-      name: finalName,
-      repoId: repo.id,
-      repoName: repo.name,
-      environment,
-      baseVersion,
-      targetVersion,
-      generateRollback,
-      outputFormat,
-    });
+    if (!canSubmit) return;
+    if (sourceMode === "repo" && repo) {
+      enqueueJob({
+        name: finalName,
+        repoId: repo.id,
+        repoName: repo.name,
+        environment,
+        baseVersion,
+        targetVersion,
+        generateRollback,
+        outputFormat,
+      });
+    } else if (sourceMode === "gitless" && baseFolder && targetFolder) {
+      enqueueJob({
+        name: finalName,
+        repoId: "gitless",
+        repoName: `Gitless · ${baseFolder.name} → ${targetFolder.name}`,
+        environment,
+        baseVersion: baseFolder.name,
+        targetVersion: targetFolder.name,
+        generateRollback,
+        outputFormat,
+      });
+    }
     toast({
       title: "Added to queue",
       description: `${finalName} — you can keep working while it builds.`,
