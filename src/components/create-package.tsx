@@ -8,13 +8,17 @@ import {
   FileMinus,
   FilePlus2,
   FilePenLine,
+  FolderOpen,
   Github,
+  GitBranch as GitBranchIcon,
   GitlabIcon as Gitlab,
   HardDrive,
   Package as PackageIcon,
   Server as ServerIcon,
   ShieldAlert,
   Sparkles,
+  Upload,
+  X,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
