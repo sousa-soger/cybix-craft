@@ -523,13 +523,29 @@ export const CreatePackage = () => {
 
           <div className="space-y-3 text-sm">
             
+            {sourceMode === "repo" ? (
+              <SummaryRow
+                label="Repository"
+                value={repo?.name ?? "—"}
+                icon={repo ? providerIcon(repo.provider) : undefined}
+              />
+            ) : (
+              <SummaryRow
+                label="Source"
+                value="Gitless folders"
+                icon={<FolderOpen className="h-3.5 w-3.5" />}
+              />
+            )}
             <SummaryRow
-              label="Repository"
-              value={repo?.name ?? "—"}
-              icon={repo ? providerIcon(repo.provider) : undefined}
+              label="Base"
+              value={sourceMode === "repo" ? (baseVersion || "—") : (baseFolder?.name || "—")}
+              mono
             />
-            <SummaryRow label="Base" value={baseVersion || "—"} mono />
-            <SummaryRow label="Target" value={targetVersion || "—"} mono />
+            <SummaryRow
+              label="Target"
+              value={sourceMode === "repo" ? (targetVersion || "—") : (targetFolder?.name || "—")}
+              mono
+            />
             <SummaryRow
               label="Environment"
               value={<EnvBadge env={environment} />}
