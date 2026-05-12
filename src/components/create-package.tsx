@@ -351,10 +351,56 @@ export const CreatePackage = () => {
             </div>
           )}
         </SectionCard>
+        </>
+        )}
+
+        {sourceMode === "gitless" && (
+          <SectionCard
+            step={1}
+            title="Project folders"
+            subtitle="Drag & drop the base and target folders. We'll diff them locally — no git required."
+          >
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 items-stretch">
+              <FolderDropzone label="Base folder" hint="Older / current version" tone="base" value={baseFolder} onChange={setBaseFolder} />
+              <div className="hidden md:flex items-center justify-center">
+                <div className="h-9 w-9 rounded-full brand-soft-bg flex items-center justify-center">
+                  <ArrowRight className="h-4 w-4 text-primary" />
+                </div>
+              </div>
+              <FolderDropzone label="Target folder" hint="Newer version to ship" tone="target" value={targetFolder} onChange={setTargetFolder} />
+            </div>
+
+            {identical && (
+              <div className="mt-4 flex items-start gap-2 rounded-lg border border-failed/30 bg-failed/8 p-3 text-sm text-failed">
+                <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
+                <span>Base and target folders cannot have the same name. Pick two different folders.</span>
+              </div>
+            )}
+
+            {changeset && (
+              <div className="mt-5 animate-fade-in">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    Detected changes
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    ~{changeset.estimatedSizeMB} MB · {changeset.added.length + changeset.modified.length + changeset.deleted.length} files
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <ChangeStat icon={<FilePlus2 className="h-4 w-4" />} label="Added" value={changeset.added.length} tone="success" />
+                  <ChangeStat icon={<FilePenLine className="h-4 w-4" />} label="Modified" value={changeset.modified.length} tone="running" />
+                  <ChangeStat icon={<FileMinus className="h-4 w-4" />} label="Deleted" value={changeset.deleted.length} tone="failed" />
+                </div>
+              </div>
+            )}
+          </SectionCard>
+        )}
 
         {/* SECTION 3 — Environment & Package */}
         <SectionCard
-          step={3}
+          step={sourceMode === "gitless" ? 2 : 3}
           title="Environment & Package Settings"
           subtitle="Where will this package be applied?"
         >
