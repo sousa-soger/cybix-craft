@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import Index from "./pages/Index.tsx";
+import Projects from "./pages/Projects.tsx";
 import Repositories from "./pages/Repositories.tsx";
 import Create from "./pages/Create.tsx";
 import Packages from "./pages/Packages.tsx";
@@ -27,7 +28,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/repositories" element={<Repositories />} />
-            <Route path="/projects" element={<Navigate to="/repositories" replace />} />
+            <Route path="/projects" element={<Projects />} />
             <Route path="/team" element={<Navigate to="/repositories" replace />} />
             <Route path="/create" element={<Create />} />
             <Route path="/packages" element={<Packages />} />
