@@ -16,9 +16,12 @@ import {
   UserPlus,
   FolderKanban,
   ChevronRight,
+  ChevronDown,
   RefreshCw,
   CalendarDays,
   ExternalLink,
+  LayoutGrid,
+  List as ListIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/app-shell";
