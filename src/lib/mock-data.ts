@@ -366,3 +366,62 @@ export const ROLE_META: Record<TeamRole, { label: string; desc: string; color: s
 };
 
 export const CURRENT_USER_ID = "m1";
+
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  color: string; // tailwind gradient classes
+  repositoryIds: string[];
+  serverIds: string[];
+  memberIds: string[];
+  ownerId: string;
+  createdAt: string;
+}
+
+export const projects: Project[] = [
+  {
+    id: "p1",
+    name: "Atlas",
+    description: "Commerce platform — storefront, marketing site and supporting services.",
+    color: "from-brand-rose to-brand-iris",
+    repositoryIds: ["r1", "r2"],
+    serverIds: ["s1", "s2"],
+    memberIds: ["m1", "m2", "m3", "m4"],
+    ownerId: "m1",
+    createdAt: "2025-01-12",
+  },
+  {
+    id: "p2",
+    name: "Helios",
+    description: "Core API and graph gateway powering internal product suite.",
+    color: "from-brand-iris to-brand-teal",
+    repositoryIds: ["r3", "r4"],
+    serverIds: ["s3", "s4"],
+    memberIds: ["m1", "m2", "m3"],
+    ownerId: "m2",
+    createdAt: "2024-09-03",
+  },
+  {
+    id: "p3",
+    name: "Nimbus",
+    description: "Mobile client and supporting release pipelines.",
+    color: "from-brand-teal to-brand-iris",
+    repositoryIds: ["r5"],
+    serverIds: ["s5"],
+    memberIds: ["m1", "m3", "m4"],
+    ownerId: "m3",
+    createdAt: "2025-03-21",
+  },
+  {
+    id: "p4",
+    name: "Orion",
+    description: "Internal admin dashboard and tooling.",
+    color: "from-brand-rose to-brand-teal",
+    repositoryIds: ["r6"],
+    serverIds: [],
+    memberIds: ["m1", "m4"],
+    ownerId: "m4",
+    createdAt: "2025-05-08",
+  },
+];
