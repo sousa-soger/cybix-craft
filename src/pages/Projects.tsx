@@ -79,7 +79,17 @@ const Projects = () => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [query, setQuery] = useState("");
+  const [view, setView] = useState<"card" | "list">("card");
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  const toggleExpand = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   const filtered = useMemo(() => {
     if (!query.trim()) return projects;
