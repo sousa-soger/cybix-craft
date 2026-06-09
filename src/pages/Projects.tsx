@@ -123,7 +123,29 @@ const Projects = () => {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <div className="ml-auto text-xs text-muted-foreground tabular-nums">
+        <div className="ml-auto inline-flex items-center rounded-lg border border-border/70 bg-card p-1 shadow-sm">
+          <button
+            onClick={() => setView("card")}
+            className={cn(
+              "px-2.5 py-1.5 rounded-md text-xs font-semibold inline-flex items-center gap-1.5 transition-base",
+              view === "card" ? "brand-soft-bg text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground",
+            )}
+            aria-label="Card view"
+          >
+            <LayoutGrid className="h-3.5 w-3.5" /> Cards
+          </button>
+          <button
+            onClick={() => setView("list")}
+            className={cn(
+              "px-2.5 py-1.5 rounded-md text-xs font-semibold inline-flex items-center gap-1.5 transition-base",
+              view === "list" ? "brand-soft-bg text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground",
+            )}
+            aria-label="List view"
+          >
+            <ListIcon className="h-3.5 w-3.5" /> List
+          </button>
+        </div>
+        <div className="text-xs text-muted-foreground tabular-nums">
           {filtered.length} of {projects.length}
         </div>
       </div>
