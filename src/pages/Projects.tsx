@@ -160,7 +160,7 @@ const Projects = () => {
             {query ? "Try a different search." : "Create your first project to group repositories and servers."}
           </p>
         </div>
-      ) : (
+      ) : view === "card" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((p) => {
             const owner = allRepos.flatMap((r) => r.members).find((m) => m.id === p.ownerId);
@@ -224,6 +224,148 @@ const Projects = () => {
             <div className="text-sm font-semibold">New Project</div>
             <div className="text-[11px] text-muted-foreground">Group repositories and servers</div>
           </button>
+        </div>
+      ) : (
+        <div className="section-card p-0 overflow-hidden">
+          <div className="grid grid-cols-[auto_minmax(0,2fr)_minmax(0,1.2fr)_auto_auto_auto] gap-3 px-5 py-2.5 text-[10px] uppercase tracking-wider text-muted-foreground bg-secondary/40 border-b border-border/60 font-semibold">
+            <div />
+            <div>Project</div>
+            <div className="hidden md:block">Owner</div>
+            <div className="hidden md:block text-right">Repos</div>
+            <div className="hidden md:block text-right">Servers</div>
+            <div className="text-right">Members</div>
+          </div>
+          <ul className="divide-y divide-border/60">
+            {filtered.map((p) => {
+              const owner = allRepos.flatMap((r) => r.members).find((m) => m.id === p.ownerId);
+              const repos = allRepos.filter((r) => p.repositoryIds.includes(r.id));
+              const servers = allServers.filter((s) => p.serverIds.includes(s.id));
+              const isOpen = expanded.has(p.id);
+              return (
+                <li key={p.id}>
+                  <div className="grid grid-cols-[auto_minmax(0,2fr)_minmax(0,1.2fr)_auto_auto_auto] gap-3 items-center px-5 py-3 hover:bg-secondary/40 transition-base">
+                    <button
+                      onClick={() => toggleExpand(p.id)}
+                      className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-secondary"
+                      aria-label={isOpen ? "Collapse" : "Expand"}
+                    >
+                      {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </button>
+                    <button
+                      onClick={() => setActiveId(p.id)}
+                      className="flex items-center gap-3 min-w-0 text-left"
+                    >
+                      <div className={cn("h-9 w-9 rounded-md flex items-center justify-center text-[hsl(var(--on-brand))] shrink-0 bg-gradient-to-br shadow-soft", p.color)}>
+                        <FolderKanban className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold truncate">{p.name}</div>
+                        <div className="text-[11px] text-muted-foreground truncate">{p.description}</div>
+                      </div>
+                    </button>
+                    <div className="hidden md:flex items-center gap-2 min-w-0">
+                      {owner ? (
+                        <>
+                          <Avatar className="h-6 w-6 shrink-0">
+                            <AvatarFallback className="brand-gradient-bg text-[hsl(var(--on-brand))] text-[10px] font-semibold">
+                              {owner.initials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="text-xs font-semibold truncate inline-flex items-center gap-1">
+                            <Crown className="h-2.5 w-2.5 text-primary" /> {owner.name}
+                          </div>
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </div>
+                    <div className="hidden md:block text-xs text-muted-foreground tabular-nums text-right">{repos.length}</div>
+                    <div className="hidden md:block text-xs text-muted-foreground tabular-nums text-right">{servers.length}</div>
+                    <div className="text-xs text-muted-foreground tabular-nums text-right">{p.memberIds.length}</div>
+                  </div>
+                  {isOpen && (
+                    <div className="px-5 pb-4 pt-1 bg-secondary/20 border-t border-border/40 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Repositories */}
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2 inline-flex items-center gap-1.5">
+                          <GitBranch className="h-3 w-3" /> Repositories · {repos.length}
+                        </div>
+                        {repos.length === 0 ? (
+                          <div className="text-[11px] text-muted-foreground italic">No repositories attached.</div>
+                        ) : (
+                          <ul className="space-y-1.5">
+                            {repos.map((r) => (
+                              <li key={r.id}>
+                                <button
+                                  onClick={() => navigate("/repositories")}
+                                  className="w-full flex items-center gap-2.5 rounded-md border border-border/60 bg-card px-2.5 py-2 hover:border-primary/40 hover:shadow-soft transition-base text-left"
+                                >
+                                  <div className="h-7 w-7 rounded brand-soft-bg flex items-center justify-center text-primary shrink-0">
+                                    {providerIcon(r.provider, "h-3.5 w-3.5")}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="text-xs font-semibold font-mono truncate">{r.name}</div>
+                                    <div className="text-[10px] text-muted-foreground truncate inline-flex items-center gap-2">
+                                      <span className="inline-flex items-center gap-1"><GitBranch className="h-2.5 w-2.5" />{r.branches.length}</span>
+                                      <span className="inline-flex items-center gap-1"><Tag className="h-2.5 w-2.5" />{r.tags.length}</span>
+                                      <span>default · {r.defaultBranch}</span>
+                                    </div>
+                                  </div>
+                                  <StatusPill status={r.status} />
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                      {/* Servers */}
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2 inline-flex items-center gap-1.5">
+                          <ServerIcon className="h-3 w-3" /> Servers · {servers.length}
+                        </div>
+                        {servers.length === 0 ? (
+                          <div className="text-[11px] text-muted-foreground italic">No servers attached.</div>
+                        ) : (
+                          <ul className="space-y-1.5">
+                            {servers.map((s) => (
+                              <li key={s.id}>
+                                <button
+                                  onClick={() => navigate("/servers")}
+                                  className="w-full flex items-center gap-2.5 rounded-md border border-border/60 bg-card px-2.5 py-2 hover:border-primary/40 hover:shadow-soft transition-base text-left"
+                                >
+                                  <div className="h-7 w-7 rounded brand-soft-bg flex items-center justify-center text-primary shrink-0">
+                                    <ServerIcon className="h-3.5 w-3.5" />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="text-xs font-semibold font-mono truncate">{s.name}</div>
+                                    <div className="text-[10px] text-muted-foreground truncate">
+                                      {s.protocol} · {s.host} · {s.path}
+                                    </div>
+                                  </div>
+                                  <EnvBadge env={s.environment} />
+                                  <span
+                                    className={cn(
+                                      "inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border whitespace-nowrap",
+                                      s.status === "online"
+                                        ? "bg-success/10 text-success border-success/30"
+                                        : "bg-failed/10 text-failed border-failed/30",
+                                    )}
+                                  >
+                                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                                    {s.status}
+                                  </span>
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
 
