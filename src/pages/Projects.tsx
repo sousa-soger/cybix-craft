@@ -392,10 +392,25 @@ interface SheetProps {
   onNavigate: (path: string) => void;
 }
 
+const AUTH_LABEL: Record<string, string> = {
+  oauth: "OAuth",
+  pat: "Personal Access Token",
+  ssh: "SSH key",
+  userpass: "User / Password",
+};
+
 const ProjectDetailsSheet = ({ project, open, onOpenChange, onUpdate, onNavigate }: SheetProps) => {
   const [activeServerId, setActiveServerId] = useState<string | null>(null);
+  const [expandedRepos, setExpandedRepos] = useState<Set<string>>(new Set());
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<TeamRole>("maintainer");
+
+  const toggleRepo = (id: string) =>
+    setExpandedRepos((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
 
   const repos = useMemo<Repository[]>(
     () => (project ? allRepos.filter((r) => project.repositoryIds.includes(r.id)) : []),
