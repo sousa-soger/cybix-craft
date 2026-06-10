@@ -413,6 +413,13 @@ const ProjectDetailsSheet = ({ project, open, onOpenChange, onUpdate, onNavigate
       return next;
     });
 
+  const toggleServer = (id: string) =>
+    setExpandedServers((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
   const repos = useMemo<Repository[]>(
     () => (project ? allRepos.filter((r) => project.repositoryIds.includes(r.id)) : []),
     [project],
