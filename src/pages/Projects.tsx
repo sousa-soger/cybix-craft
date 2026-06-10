@@ -401,8 +401,8 @@ const AUTH_LABEL: Record<string, string> = {
 };
 
 const ProjectDetailsSheet = ({ project, open, onOpenChange, onUpdate, onNavigate }: SheetProps) => {
-  const [activeServerId, setActiveServerId] = useState<string | null>(null);
   const [expandedRepos, setExpandedRepos] = useState<Set<string>>(new Set());
+  const [expandedServers, setExpandedServers] = useState<Set<string>>(new Set());
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<TeamRole>("maintainer");
 
