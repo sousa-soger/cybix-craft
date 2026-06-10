@@ -747,7 +747,7 @@ const ProjectDetailsSheet = ({ project, open, onOpenChange, onUpdate, onNavigate
               </ul>
             </section>
 
-            {/* Servers — list + detail */}
+            {/* Servers */}
             <section className="p-5 bg-secondary/10">
               <div className="flex items-center justify-between mb-3">
                 <div className="text-sm font-semibold inline-flex items-center gap-2">
@@ -760,82 +760,115 @@ const ProjectDetailsSheet = ({ project, open, onOpenChange, onUpdate, onNavigate
                   <Plus className="h-3.5 w-3.5" /> Add
                 </Button>
               </div>
-
-              <ul className="space-y-1.5 mb-4 max-h-[200px] overflow-y-auto pr-1">
+              <ul className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
                 {servers.map((s) => {
-                  const isActive = activeServer?.id === s.id;
+                  const isOpen = expandedServers.has(s.id);
                   return (
-                    <li key={s.id}>
+                    <li
+                      key={s.id}
+                      className="rounded-lg border border-border/60 bg-card hover:border-primary/40 hover:shadow-soft transition-base overflow-hidden"
+                    >
                       <button
-                        onClick={() => setActiveServerId(s.id)}
-                        className={cn(
-                          "w-full text-left px-3 py-2 rounded-lg flex items-center gap-2.5 transition-base",
-                          isActive ? "brand-soft-bg shadow-soft" : "bg-card border border-border/60 hover:bg-secondary/40",
-                        )}
+                        type="button"
+                        onClick={() => toggleServer(s.id)}
+                        className="w-full text-left p-3 flex items-start gap-3"
+                        aria-expanded={isOpen}
                       >
-                        <div className={cn(
-                          "h-7 w-7 rounded-md flex items-center justify-center shrink-0",
-                          isActive ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground",
-                        )}>
-                          <ServerIcon className="h-3.5 w-3.5" />
+                        <div className="h-9 w-9 rounded-md brand-soft-bg flex items-center justify-center text-primary shrink-0">
+                          <ServerIcon className="h-4 w-4" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="text-xs font-semibold truncate flex items-center gap-1.5">
-                            {s.name}
-                            <span className={cn(
-                              "h-1.5 w-1.5 rounded-full",
-                              s.status === "online" ? "bg-success animate-pulse-soft" : "bg-inactive",
-                            )} />
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <div className="text-xs font-semibold font-mono truncate">{s.name}</div>
+                            <span
+                              className={cn(
+                                "inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md border whitespace-nowrap",
+                                s.status === "online"
+                                  ? "bg-success/10 text-success border-success/30"
+                                  : "bg-inactive/15 text-inactive border-inactive/30",
+                              )}
+                            >
+                              <span className={cn("h-1.5 w-1.5 rounded-full bg-current", s.status === "online" && "animate-pulse-soft")} />
+                              {s.status === "online" ? "Online" : "Offline"}
+                            </span>
                           </div>
-                          <div className="text-[10px] font-mono text-muted-foreground truncate">{s.host}</div>
+                          <div className="text-[10px] text-muted-foreground truncate mt-0.5 inline-flex items-center gap-1">
+                            {s.protocol} · {s.host}
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                            <EnvBadge env={s.environment} />
+                          </div>
                         </div>
-                        <EnvBadge env={s.environment} />
+                        <ChevronDown
+                          className={cn(
+                            "h-4 w-4 text-muted-foreground shrink-0 transition-transform",
+                            isOpen && "rotate-180",
+                          )}
+                        />
                       </button>
+                      {isOpen && (
+                        <div className="border-t border-border/60 bg-secondary/30 px-3 py-3 space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">
+                                Protocol
+                              </div>
+                              <div className="text-xs font-semibold">{s.protocol}</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">
+                                Environment
+                              </div>
+                              <EnvBadge env={s.environment} />
+                            </div>
+                            <div>
+                              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">
+                                Host
+                              </div>
+                              <div className="text-xs font-semibold font-mono">{s.host}</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">
+                                Deploy path
+                              </div>
+                              <div className="text-xs font-semibold font-mono">{s.path}</div>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 pt-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => toast.success("Pinging server…", { description: s.name })}
+                            >
+                              <RefreshCw className="h-3.5 w-3.5" /> Test
+                            </Button>
+                            <Button
+                              variant="brand"
+                              size="sm"
+                              onClick={() => onNavigate("/deployments")}
+                            >
+                              Deploy
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="ml-auto"
+                              onClick={() => onNavigate("/servers")}
+                            >
+                              Open <ExternalLink className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </li>
                   );
                 })}
                 {servers.length === 0 && (
-                  <div className="text-center py-6 text-xs text-muted-foreground border border-dashed rounded-lg">
+                  <div className="text-center py-8 text-xs text-muted-foreground border border-dashed rounded-lg">
                     No servers attached.
                   </div>
                 )}
               </ul>
-
-              {activeServer && (
-                <div className="rounded-xl border border-border/70 bg-card p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="h-9 w-9 rounded-md brand-soft-bg flex items-center justify-center text-primary">
-                      <ServerIcon className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-semibold truncate">{activeServer.name}</div>
-                      <div className="text-[10px] text-muted-foreground">{activeServer.protocol}</div>
-                    </div>
-                    <span className={cn(
-                      "text-[10px] font-semibold px-2 py-0.5 rounded-md border inline-flex items-center gap-1.5",
-                      activeServer.status === "online"
-                        ? "bg-success/10 text-success border-success/30"
-                        : "bg-inactive/15 text-inactive border-inactive/30",
-                    )}>
-                      <span className={cn("h-1.5 w-1.5 rounded-full bg-current", activeServer.status === "online" && "animate-pulse-soft")} />
-                      {activeServer.status === "online" ? "Online" : "Offline"}
-                    </span>
-                  </div>
-                  <div className="space-y-2.5">
-                    <DetailRow label="Host" value={activeServer.host} mono />
-                    <DetailRow label="Deploy path" value={activeServer.path} mono />
-                    <DetailRow label="Environment" value={<EnvBadge env={activeServer.environment} />} />
-                  </div>
-                  <div className="flex gap-2 mt-4">
-                    <Button variant="outline" size="sm" className="flex-1" onClick={() => toast.success("Pinging server…")}>
-                      <RefreshCw className="h-3.5 w-3.5" /> Test
-                    </Button>
-                    <Button variant="brand" size="sm" className="flex-1" onClick={() => onNavigate("/deployments")}>
-                      Deploy
-                    </Button>
-                  </div>
-                </div>
-              )}
             </section>
           </div>
         </div>
