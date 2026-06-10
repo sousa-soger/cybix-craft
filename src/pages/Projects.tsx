@@ -445,8 +445,6 @@ const ProjectDetailsSheet = ({ project, open, onOpenChange, onUpdate, onNavigate
     return list.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
   }, [project]);
 
-  const activeServer = servers.find((s) => s.id === activeServerId) ?? servers[0] ?? null;
-
   if (!project) return null;
 
   const owner = members.find((m) => m.id === project.ownerId);
