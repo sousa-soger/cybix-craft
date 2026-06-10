@@ -620,12 +620,21 @@ const ProjectDetailsSheet = ({ project, open, onOpenChange, onUpdate, onNavigate
                 </Button>
               </div>
               <ul className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
-                {repos.map((r) => (
+                {repos.map((r) => {
+                  const isOpen = expandedRepos.has(r.id);
+                  const authLabel = AUTH_LABEL[r.authMethod] ?? r.authMethod;
+                  const isOAuth = r.authMethod === "oauth";
+                  return (
                   <li
                     key={r.id}
-                    className="rounded-lg border border-border/60 bg-card p-3 hover:border-primary/40 hover:shadow-soft transition-base"
+                    className="rounded-lg border border-border/60 bg-card hover:border-primary/40 hover:shadow-soft transition-base overflow-hidden"
                   >
-                    <div className="flex items-start gap-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleRepo(r.id)}
+                      className="w-full text-left p-3 flex items-start gap-3"
+                      aria-expanded={isOpen}
+                    >
                       <div className="h-9 w-9 rounded-md brand-soft-bg flex items-center justify-center text-primary shrink-0">
                         {providerIcon(r.provider, "h-4 w-4")}
                       </div>
@@ -648,9 +657,82 @@ const ProjectDetailsSheet = ({ project, open, onOpenChange, onUpdate, onNavigate
                           <span className="text-[10px] text-muted-foreground">· {r.defaultBranch}</span>
                         </div>
                       </div>
-                    </div>
+                      <ChevronDown
+                        className={cn(
+                          "h-4 w-4 text-muted-foreground shrink-0 transition-transform",
+                          isOpen && "rotate-180",
+                        )}
+                      />
+                    </button>
+                    {isOpen && (
+                      <div className="border-t border-border/60 bg-secondary/30 px-3 py-3 space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">
+                              Connection type
+                            </div>
+                            <div className="text-xs font-semibold inline-flex items-center gap-1.5">
+                              <KeyRound className="h-3 w-3 text-primary" />
+                              {authLabel}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">
+                              Default branch
+                            </div>
+                            <div className="text-xs font-semibold font-mono inline-flex items-center gap-1.5">
+                              <GitBranch className="h-3 w-3 text-primary" />
+                              {r.defaultBranch}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">
+                              Synced
+                            </div>
+                            <div className="text-xs font-semibold">{r.lastSyncedAt}</div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">
+                              Last verified
+                            </div>
+                            <div className="text-xs font-semibold">{r.lastVerifiedAt}</div>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => toast.success("Syncing…", { description: r.name })}
+                          >
+                            <RefreshCw className="h-3.5 w-3.5" /> Sync now
+                          </Button>
+                          <Button
+                            variant="soft"
+                            size="sm"
+                            onClick={() =>
+                              toast.info(
+                                isOAuth ? `Reconnect ${authLabel}` : `Update ${authLabel}`,
+                                { description: r.name },
+                              )
+                            }
+                          >
+                            <KeyRound className="h-3.5 w-3.5" />
+                            {isOAuth ? `Reconnect ${authLabel}` : `Update ${authLabel}`}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="ml-auto"
+                            onClick={() => onNavigate("/repositories")}
+                          >
+                            Open <ExternalLink className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </li>
-                ))}
+                  );
+                })}
                 {repos.length === 0 && (
                   <div className="text-center py-8 text-xs text-muted-foreground border border-dashed rounded-lg">
                     No repositories attached.
