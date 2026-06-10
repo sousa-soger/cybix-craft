@@ -18,6 +18,7 @@ import {
   ChevronRight,
   ChevronDown,
   RefreshCw,
+  KeyRound,
   CalendarDays,
   ExternalLink,
   LayoutGrid,
