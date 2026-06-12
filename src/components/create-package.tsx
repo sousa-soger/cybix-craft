@@ -13,10 +13,13 @@ import {
   GitBranch as GitBranchIcon,
   GitlabIcon as Gitlab,
   HardDrive,
+  Layers,
   Package as PackageIcon,
+  Plus,
   Server as ServerIcon,
   ShieldAlert,
   Sparkles,
+  Trash2,
   Upload,
   X,
   Zap,
@@ -47,9 +50,11 @@ import { EnvBadge } from "@/components/badges";
 import { cn } from "@/lib/utils";
 import {
   mockChangeset,
+  projects,
   repositories,
   type Environment,
   type RepoProvider,
+  type Repository,
 } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { enqueueJob } from "@/lib/package-queue";
@@ -82,32 +87,77 @@ interface FolderDrop {
   sizeMB: number;
 }
 
+interface RepoSelection {
+  repoId: string;
+  base: string;
+  target: string;
+}
+
 export const CreatePackage = () => {
   const { toast } = useToast();
 
   const [sourceMode, setSourceMode] = useState<SourceMode>("repo");
 
-  const [repoId, setRepoId] = useState<string>(repositories[0]?.id ?? "");
-  const repo = repositories.find((r) => r.id === repoId);
+  // ===== Project + repo selections =====
+  const [projectId, setProjectId] = useState<string>(projects[0]?.id ?? "");
+  const project = projects.find((p) => p.id === projectId);
 
-  const versionOptions = useMemo(() => {
-    if (!repo) return [] as string[];
-    return [...repo.tags, ...repo.branches];
-  }, [repo]);
+  const projectRepos: Repository[] = useMemo(
+    () =>
+      (project?.repositoryIds ?? [])
+        .map((id) => repositories.find((r) => r.id === id))
+        .filter((r): r is Repository => !!r),
+    [project],
+  );
 
-  const [baseVersion, setBaseVersion] = useState<string>(repo?.tags[1] ?? "");
-  const [targetVersion, setTargetVersion] = useState<string>(repo?.tags[0] ?? "");
+  const [selections, setSelections] = useState<RepoSelection[]>([]);
+
+  // When project changes, seed with first repo of project
+  useEffect(() => {
+    if (projectRepos.length === 0) {
+      setSelections([]);
+      return;
+    }
+    const first = projectRepos[0];
+    setSelections([
+      {
+        repoId: first.id,
+        base: first.tags[1] ?? first.tags[0] ?? first.branches[0] ?? "",
+        target: first.tags[0] ?? first.branches[0] ?? "",
+      },
+    ]);
+  }, [projectId]);
+
+  const addableRepos = projectRepos.filter(
+    (r) => !selections.some((s) => s.repoId === r.id),
+  );
+
+  const addRepo = (repoId: string) => {
+    const r = repositories.find((x) => x.id === repoId);
+    if (!r) return;
+    setSelections((prev) => [
+      ...prev,
+      {
+        repoId,
+        base: r.tags[1] ?? r.tags[0] ?? r.branches[0] ?? "",
+        target: r.tags[0] ?? r.branches[0] ?? "",
+      },
+    ]);
+  };
+
+  const removeRepo = (repoId: string) => {
+    setSelections((prev) => prev.filter((s) => s.repoId !== repoId));
+  };
+
+  const patchSelection = (repoId: string, patch: Partial<RepoSelection>) => {
+    setSelections((prev) =>
+      prev.map((s) => (s.repoId === repoId ? { ...s, ...patch } : s)),
+    );
+  };
 
   // Gitless folder state
   const [baseFolder, setBaseFolder] = useState<FolderDrop | null>(null);
   const [targetFolder, setTargetFolder] = useState<FolderDrop | null>(null);
-
-  useEffect(() => {
-    if (repo) {
-      setBaseVersion(repo.tags[1] ?? repo.branches[0] ?? "");
-      setTargetVersion(repo.tags[0] ?? repo.branches[0] ?? "");
-    }
-  }, [repoId]);
 
   const [environment, setEnvironment] = useState<Environment>("DEV");
   const [customName, setCustomName] = useState("");
@@ -116,49 +166,101 @@ export const CreatePackage = () => {
   const [generateRollback, setGenerateRollback] = useState(true);
   const [confirmedProd, setConfirmedProd] = useState(false);
 
-  const identical =
-    sourceMode === "repo"
-      ? !!baseVersion && !!targetVersion && baseVersion === targetVersion
-      : !!baseFolder && !!targetFolder && baseFolder.name === targetFolder.name;
+  // Per-selection validity
+  const selectionHasIdentical = selections.some(
+    (s) => s.base && s.target && s.base === s.target,
+  );
+  const selectionAllFilled =
+    selections.length > 0 && selections.every((s) => s.base && s.target);
 
-  const changeset = useMemo(() => {
-    if (identical) return null;
-    if (sourceMode === "repo") return mockChangeset(baseVersion, targetVersion);
-    if (baseFolder && targetFolder) return mockChangeset(baseFolder.name, targetFolder.name);
+  const gitlessIdentical =
+    !!baseFolder && !!targetFolder && baseFolder.name === targetFolder.name;
+
+  const identical =
+    sourceMode === "repo" ? selectionHasIdentical : gitlessIdentical;
+
+  // Aggregated changeset across selected repos
+  const changesets = useMemo(() => {
+    if (sourceMode !== "repo") return [];
+    return selections
+      .map((s) => ({ sel: s, cs: mockChangeset(s.base, s.target) }))
+      .filter((x) => x.cs);
+  }, [sourceMode, selections]);
+
+  const aggregatedChangeset = useMemo(() => {
+    if (sourceMode === "repo") {
+      if (changesets.length === 0) return null;
+      return changesets.reduce(
+        (acc, { cs }) => ({
+          added: [...acc.added, ...(cs?.added ?? [])],
+          modified: [...acc.modified, ...(cs?.modified ?? [])],
+          deleted: [...acc.deleted, ...(cs?.deleted ?? [])],
+          estimatedSizeMB: +(acc.estimatedSizeMB + (cs?.estimatedSizeMB ?? 0)).toFixed(1),
+        }),
+        { added: [] as string[], modified: [] as string[], deleted: [] as string[], estimatedSizeMB: 0 },
+      );
+    }
+    if (baseFolder && targetFolder && !gitlessIdentical) {
+      return mockChangeset(baseFolder.name, targetFolder.name);
+    }
     return null;
-  }, [sourceMode, baseVersion, targetVersion, baseFolder, targetFolder, identical]);
+  }, [sourceMode, changesets, baseFolder, targetFolder, gitlessIdentical]);
 
   const autoName = useMemo(() => {
     const sanitize = (s: string) => s.replace(/[^a-zA-Z0-9.-]/g, "-");
     const ts = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "").slice(0, 12);
     if (sourceMode === "repo") {
-      if (!repo || !baseVersion || !targetVersion) return "";
-      const projShort = repo.name.split("/").pop() ?? "project";
-      return `${environment}-${projShort}-${sanitize(baseVersion)}-to-${sanitize(targetVersion)}-${ts}`;
+      if (!project || selections.length === 0 || !selectionAllFilled) return "";
+      const projShort = sanitize(project.name.toLowerCase());
+      if (selections.length === 1) {
+        const s = selections[0];
+        const r = repositories.find((x) => x.id === s.repoId);
+        const rShort = r ? r.name.split("/").pop() ?? "repo" : "repo";
+        return `${environment}-${projShort}-${sanitize(rShort)}-${sanitize(s.base)}-to-${sanitize(s.target)}-${ts}`;
+      }
+      return `${environment}-${projShort}-multi-${selections.length}repos-${ts}`;
     }
     if (!baseFolder || !targetFolder) return "";
     return `${environment}-gitless-${sanitize(baseFolder.name)}-to-${sanitize(targetFolder.name)}-${ts}`;
-  }, [sourceMode, repo, baseVersion, targetVersion, baseFolder, targetFolder, environment]);
+  }, [sourceMode, project, selections, selectionAllFilled, baseFolder, targetFolder, environment]);
 
   const finalName = customName.trim() || autoName;
 
   const canSubmit =
     sourceMode === "repo"
-      ? !!repo && !!baseVersion && !!targetVersion && !identical && (environment !== "PROD" || confirmedProd)
-      : !!baseFolder && !!targetFolder && !identical && (environment !== "PROD" || confirmedProd);
+      ? !!project &&
+        selections.length > 0 &&
+        selectionAllFilled &&
+        !selectionHasIdentical &&
+        (environment !== "PROD" || confirmedProd)
+      : !!baseFolder && !!targetFolder && !gitlessIdentical && (environment !== "PROD" || confirmedProd);
 
   const handleGenerate = () => {
     if (!canSubmit) return;
-    if (sourceMode === "repo" && repo) {
-      enqueueJob({
-        name: finalName,
-        repoId: repo.id,
-        repoName: repo.name,
-        environment,
-        baseVersion,
-        targetVersion,
-        generateRollback,
-        outputFormat,
+    if (sourceMode === "repo" && project) {
+      selections.forEach((s, i) => {
+        const r = repositories.find((x) => x.id === s.repoId);
+        if (!r) return;
+        const sanitize = (v: string) => v.replace(/[^a-zA-Z0-9.-]/g, "-");
+        const repoShort = r.name.split("/").pop() ?? r.name;
+        const perRepoName =
+          selections.length === 1
+            ? finalName
+            : `${finalName}__${sanitize(repoShort)}`;
+        enqueueJob({
+          name: perRepoName,
+          repoId: r.id,
+          repoName: `${project.name} · ${r.name}`,
+          environment,
+          baseVersion: s.base,
+          targetVersion: s.target,
+          generateRollback,
+          outputFormat,
+        });
+      });
+      toast({
+        title: selections.length > 1 ? `${selections.length} packages queued` : "Added to queue",
+        description: `${project.name} — running in background.`,
       });
     } else if (sourceMode === "gitless" && baseFolder && targetFolder) {
       enqueueJob({
@@ -171,11 +273,11 @@ export const CreatePackage = () => {
         generateRollback,
         outputFormat,
       });
+      toast({
+        title: "Added to queue",
+        description: `${finalName} — you can keep working while it builds.`,
+      });
     }
-    toast({
-      title: "Added to queue",
-      description: `${finalName} — you can keep working while it builds.`,
-    });
     setCustomName("");
     setConfirmedProd(false);
   };
@@ -198,8 +300,8 @@ export const CreatePackage = () => {
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <GitBranchIcon className="h-4 w-4" />
-              Registered repository
+              <Layers className="h-4 w-4" />
+              Project
             </button>
             <button
               type="button"
@@ -220,133 +322,201 @@ export const CreatePackage = () => {
           </div>
           <p className="mt-2 px-2 pb-1 text-[11px] text-muted-foreground">
             {sourceMode === "repo"
-              ? "Use a connected repository's branches or tags as base and target."
+              ? "Pick a project, then choose one or more repositories within it — package across repos in one go."
               : "Drag & drop two project folders — no git history needed. Great for one-off comparisons."}
           </p>
         </div>
 
         {sourceMode === "repo" && (
         <>
-        {/* SECTION 1 — Repository */}
+        {/* SECTION 1 — Project */}
         <SectionCard
           step={1}
-          title="Repository"
-          subtitle="Choose where this package comes from."
+          title="Project"
+          subtitle="Choose the project to build a package for."
         >
           <div className="space-y-2">
-            <Label>Repository</Label>
-            <Select value={repoId} onValueChange={setRepoId}>
-              <SelectTrigger><SelectValue placeholder="Select repository" /></SelectTrigger>
+            <Label>Project</Label>
+            <Select value={projectId} onValueChange={setProjectId}>
+              <SelectTrigger><SelectValue placeholder="Select project" /></SelectTrigger>
               <SelectContent>
-                {repositories.map((r) => (
-                  <SelectItem key={r.id} value={r.id}>
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
                     <span className="flex items-center gap-2">
-                      {providerIcon(r.provider)} {r.name}
+                      <span className={cn("h-2.5 w-2.5 rounded-full bg-gradient-to-br", p.color)} />
+                      {p.name}
+                      <span className="text-[11px] text-muted-foreground">
+                        · {p.repositoryIds.length} repo{p.repositoryIds.length === 1 ? "" : "s"}
+                      </span>
                     </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          {repo && (
-            <div className="flex flex-wrap items-center gap-2 mt-4 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary/60 px-2 py-1">
-                {providerIcon(repo.provider)} {providerLabel[repo.provider]}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary/60 px-2 py-1">
-                default · {repo.defaultBranch}
-              </span>
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-md px-2 py-1 border",
-                  repo.status === "connected" && "border-success/30 text-success bg-success/10",
-                  repo.status === "expired" && "border-queued/30 text-queued bg-queued/10",
-                  repo.status === "needs-auth" && "border-failed/30 text-failed bg-failed/10",
-                )}
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                {repo.status === "connected" ? "Connected" : repo.status === "expired" ? "Expired" : "Needs authentication"}
-              </span>
+          {project && (
+            <div className="mt-4 flex items-start gap-3 rounded-xl border border-border/60 bg-secondary/30 p-3">
+              <div className={cn("h-9 w-9 rounded-lg bg-gradient-to-br shrink-0", project.color)} />
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium">{project.name}</div>
+                <p className="text-[11px] text-muted-foreground line-clamp-2">{project.description}</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {projectRepos.map((r) => (
+                    <span key={r.id} className="inline-flex items-center gap-1 rounded-md bg-card border border-border/60 px-2 py-0.5 text-[11px]">
+                      {providerIcon(r.provider)} {r.name.split("/").pop()}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </SectionCard>
 
-        {/* SECTION 2 — Version Selection */}
+        {/* SECTION 2 — Repositories & Versions */}
         <SectionCard
           step={2}
-          title="Version Selection"
-          subtitle="Pick a base and target. We'll detect changes immediately."
+          title="Repositories & Versions"
+          subtitle="Select repositories in this project and pick base/target for each. Cross-repo packaging supported."
         >
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 items-end">
-            <div className="space-y-2">
-              <Label>Base version</Label>
-              <VersionCombobox
-                value={baseVersion}
-                onChange={setBaseVersion}
-                tags={repo?.tags ?? []}
-                branches={repo?.branches ?? []}
-                placeholder="Select base"
-              />
-              <p className="text-[11px] text-muted-foreground">Suggested: last deployed version</p>
-            </div>
-
-            <div className="hidden md:flex items-center justify-center pb-3">
-              <div className="h-9 w-9 rounded-full brand-soft-bg flex items-center justify-center">
-                <ArrowRight className="h-4 w-4 text-primary" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Target version</Label>
-              <VersionCombobox
-                value={targetVersion}
-                onChange={setTargetVersion}
-                tags={repo?.tags ?? []}
-                branches={repo?.branches ?? []}
-                placeholder="Select target"
-              />
-              <p className="text-[11px] text-muted-foreground">Suggested: latest tag</p>
-            </div>
-          </div>
-
-          {identical && (
-            <div className="mt-4 flex items-start gap-2 rounded-lg border border-failed/30 bg-failed/8 p-3 text-sm text-failed">
-              <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
-              <span>Base and target cannot be identical. Choose two different versions.</span>
+          {selections.length === 0 && (
+            <div className="rounded-lg border border-dashed border-border/70 bg-secondary/30 p-4 text-sm text-muted-foreground text-center">
+              No repositories selected. Add one below.
             </div>
           )}
 
-          {/* Live intelligence */}
-          {changeset && (
+          <div className="space-y-3">
+            {selections.map((s) => {
+              const r = repositories.find((x) => x.id === s.repoId);
+              if (!r) return null;
+              const cs = mockChangeset(s.base, s.target);
+              const repoIdentical = s.base && s.target && s.base === s.target;
+              return (
+                <div key={s.repoId} className="rounded-xl border border-border/70 bg-card p-4">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-md brand-soft-bg text-primary">
+                        {providerIcon(r.provider)}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold truncate">{r.name}</div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {providerLabel[r.provider]} · default · {r.defaultBranch}
+                        </div>
+                      </div>
+                    </div>
+                    {selections.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeRepo(s.repoId)}
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-base"
+                        aria-label="Remove repository"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 items-end">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Base version</Label>
+                      <VersionCombobox
+                        value={s.base}
+                        onChange={(v) => patchSelection(s.repoId, { base: v })}
+                        tags={r.tags}
+                        branches={r.branches}
+                        placeholder="Select base"
+                      />
+                    </div>
+                    <div className="hidden md:flex items-center justify-center pb-2">
+                      <div className="h-8 w-8 rounded-full brand-soft-bg flex items-center justify-center">
+                        <ArrowRight className="h-3.5 w-3.5 text-primary" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Target version</Label>
+                      <VersionCombobox
+                        value={s.target}
+                        onChange={(v) => patchSelection(s.repoId, { target: v })}
+                        tags={r.tags}
+                        branches={r.branches}
+                        placeholder="Select target"
+                      />
+                    </div>
+                  </div>
+
+                  {repoIdentical && (
+                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-failed/30 bg-failed/8 p-2.5 text-xs text-failed">
+                      <ShieldAlert className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                      <span>Base and target are identical for this repository.</span>
+                    </div>
+                  )}
+
+                  {cs && !repoIdentical && (
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-success/10 text-success px-2 py-0.5">
+                        <FilePlus2 className="h-3 w-3" /> {cs.added.length}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-md bg-running/10 text-running px-2 py-0.5">
+                        <FilePenLine className="h-3 w-3" /> {cs.modified.length}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-md bg-failed/10 text-failed px-2 py-0.5">
+                        <FileMinus className="h-3 w-3" /> {cs.deleted.length}
+                      </span>
+                      <span className="ml-auto">~{cs.estimatedSizeMB} MB</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {addableRepos.length > 0 && (
+            <div className="mt-3">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Plus className="h-4 w-4" /> Add another repository
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search repositories..." />
+                    <CommandList>
+                      <CommandEmpty>No repositories left.</CommandEmpty>
+                      <CommandGroup>
+                        {addableRepos.map((r) => (
+                          <CommandItem
+                            key={r.id}
+                            value={r.name}
+                            onSelect={() => addRepo(r.id)}
+                          >
+                            {providerIcon(r.provider)}
+                            <span className="ml-2 flex-1 truncate">{r.name}</span>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+
+          {aggregatedChangeset && selections.length > 1 && (
             <div className="mt-5 animate-fade-in">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <Sparkles className="h-4 w-4 text-primary" />
-                  Detected changes
+                  Combined changes
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  ~{changeset.estimatedSizeMB} MB · {changeset.added.length + changeset.modified.length + changeset.deleted.length} files
+                  ~{aggregatedChangeset.estimatedSizeMB} MB · {aggregatedChangeset.added.length + aggregatedChangeset.modified.length + aggregatedChangeset.deleted.length} files
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-3">
-                <ChangeStat
-                  icon={<FilePlus2 className="h-4 w-4" />}
-                  label="Added"
-                  value={changeset.added.length}
-                  tone="success"
-                />
-                <ChangeStat
-                  icon={<FilePenLine className="h-4 w-4" />}
-                  label="Modified"
-                  value={changeset.modified.length}
-                  tone="running"
-                />
-                <ChangeStat
-                  icon={<FileMinus className="h-4 w-4" />}
-                  label="Deleted"
-                  value={changeset.deleted.length}
-                  tone="failed"
-                />
+                <ChangeStat icon={<FilePlus2 className="h-4 w-4" />} label="Added" value={aggregatedChangeset.added.length} tone="success" />
+                <ChangeStat icon={<FilePenLine className="h-4 w-4" />} label="Modified" value={aggregatedChangeset.modified.length} tone="running" />
+                <ChangeStat icon={<FileMinus className="h-4 w-4" />} label="Deleted" value={aggregatedChangeset.deleted.length} tone="failed" />
               </div>
             </div>
           )}
@@ -370,14 +540,14 @@ export const CreatePackage = () => {
               <FolderDropzone label="Target folder" hint="Newer version to ship" tone="target" value={targetFolder} onChange={setTargetFolder} />
             </div>
 
-            {identical && (
+            {gitlessIdentical && (
               <div className="mt-4 flex items-start gap-2 rounded-lg border border-failed/30 bg-failed/8 p-3 text-sm text-failed">
                 <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
                 <span>Base and target folders cannot have the same name. Pick two different folders.</span>
               </div>
             )}
 
-            {changeset && (
+            {aggregatedChangeset && (
               <div className="mt-5 animate-fade-in">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2 text-sm font-medium">
@@ -385,13 +555,13 @@ export const CreatePackage = () => {
                     Detected changes
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    ~{changeset.estimatedSizeMB} MB · {changeset.added.length + changeset.modified.length + changeset.deleted.length} files
+                    ~{aggregatedChangeset.estimatedSizeMB} MB · {aggregatedChangeset.added.length + aggregatedChangeset.modified.length + aggregatedChangeset.deleted.length} files
                   </span>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
-                  <ChangeStat icon={<FilePlus2 className="h-4 w-4" />} label="Added" value={changeset.added.length} tone="success" />
-                  <ChangeStat icon={<FilePenLine className="h-4 w-4" />} label="Modified" value={changeset.modified.length} tone="running" />
-                  <ChangeStat icon={<FileMinus className="h-4 w-4" />} label="Deleted" value={changeset.deleted.length} tone="failed" />
+                  <ChangeStat icon={<FilePlus2 className="h-4 w-4" />} label="Added" value={aggregatedChangeset.added.length} tone="success" />
+                  <ChangeStat icon={<FilePenLine className="h-4 w-4" />} label="Modified" value={aggregatedChangeset.modified.length} tone="running" />
+                  <ChangeStat icon={<FileMinus className="h-4 w-4" />} label="Deleted" value={aggregatedChangeset.deleted.length} tone="failed" />
                 </div>
               </div>
             )}
@@ -447,7 +617,7 @@ export const CreatePackage = () => {
               className="font-mono text-xs"
             />
             <p className="text-[11px] text-muted-foreground">
-              Leave empty to use the auto-generated name.
+              Leave empty to use the auto-generated name. Multi-repo packages append the repo name per job.
             </p>
           </div>
 
@@ -522,30 +692,48 @@ export const CreatePackage = () => {
           </div>
 
           <div className="space-y-3 text-sm">
-            
             {sourceMode === "repo" ? (
-              <SummaryRow
-                label="Repository"
-                value={repo?.name ?? "—"}
-                icon={repo ? providerIcon(repo.provider) : undefined}
-              />
+              <>
+                <SummaryRow
+                  label="Project"
+                  value={project?.name ?? "—"}
+                  icon={project ? <span className={cn("h-2.5 w-2.5 rounded-full bg-gradient-to-br", project.color)} /> : undefined}
+                />
+                <SummaryRow
+                  label="Repositories"
+                  value={`${selections.length} selected`}
+                />
+                {selections.length > 0 && (
+                  <div className="space-y-1.5 rounded-lg bg-secondary/40 p-2.5">
+                    {selections.map((s) => {
+                      const r = repositories.find((x) => x.id === s.repoId);
+                      if (!r) return null;
+                      return (
+                        <div key={s.repoId} className="text-[11px]">
+                          <div className="flex items-center gap-1.5 font-medium">
+                            {providerIcon(r.provider)}
+                            <span className="truncate">{r.name.split("/").pop()}</span>
+                          </div>
+                          <div className="font-mono text-muted-foreground pl-5 truncate">
+                            {s.base || "—"} → {s.target || "—"}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             ) : (
-              <SummaryRow
-                label="Source"
-                value="Gitless folders"
-                icon={<FolderOpen className="h-3.5 w-3.5" />}
-              />
+              <>
+                <SummaryRow
+                  label="Source"
+                  value="Gitless folders"
+                  icon={<FolderOpen className="h-3.5 w-3.5" />}
+                />
+                <SummaryRow label="Base" value={baseFolder?.name || "—"} mono />
+                <SummaryRow label="Target" value={targetFolder?.name || "—"} mono />
+              </>
             )}
-            <SummaryRow
-              label="Base"
-              value={sourceMode === "repo" ? (baseVersion || "—") : (baseFolder?.name || "—")}
-              mono
-            />
-            <SummaryRow
-              label="Target"
-              value={sourceMode === "repo" ? (targetVersion || "—") : (targetFolder?.name || "—")}
-              mono
-            />
             <SummaryRow
               label="Environment"
               value={<EnvBadge env={environment} />}
@@ -565,11 +753,11 @@ export const CreatePackage = () => {
 
           <Separator className="my-4" />
 
-          {changeset ? (
+          {aggregatedChangeset ? (
             <div className="grid grid-cols-3 gap-2 mb-4">
-              <MiniStat label="Added" value={changeset.added.length} tone="success" />
-              <MiniStat label="Mod." value={changeset.modified.length} tone="running" />
-              <MiniStat label="Del." value={changeset.deleted.length} tone="failed" />
+              <MiniStat label="Added" value={aggregatedChangeset.added.length} tone="success" />
+              <MiniStat label="Mod." value={aggregatedChangeset.modified.length} tone="running" />
+              <MiniStat label="Del." value={aggregatedChangeset.deleted.length} tone="failed" />
             </div>
           ) : (
             <div className="text-xs text-muted-foreground mb-4 flex items-center gap-2">
@@ -586,7 +774,9 @@ export const CreatePackage = () => {
             onClick={handleGenerate}
           >
             <Zap className="h-4 w-4" />
-            Generate Package
+            {sourceMode === "repo" && selections.length > 1
+              ? `Generate ${selections.length} Packages`
+              : "Generate Package"}
           </Button>
           {!canSubmit && environment === "PROD" && (
             <p className="text-[11px] text-muted-foreground mt-2 text-center">
@@ -790,7 +980,6 @@ const FolderDropzone = ({
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const arr = Array.from(files);
-    // Try to derive a folder name from webkitRelativePath
     const first = arr[0] as File & { webkitRelativePath?: string };
     let name = first.webkitRelativePath?.split("/")[0] ?? first.name;
     if (arr.length === 1 && /\.(zip|tar|gz|tgz)$/i.test(first.name)) {
@@ -890,4 +1079,3 @@ const FolderDropzone = ({
     </div>
   );
 };
-
