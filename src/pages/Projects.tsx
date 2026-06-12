@@ -23,7 +23,13 @@ import {
   ExternalLink,
   LayoutGrid,
   List as ListIcon,
+  FileText,
+  Upload,
+  Save,
+  Pencil,
+  RotateCcw,
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
