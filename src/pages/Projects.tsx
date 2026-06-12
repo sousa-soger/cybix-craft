@@ -405,6 +405,20 @@ const ProjectDetailsSheet = ({ project, open, onOpenChange, onUpdate, onNavigate
   const [expandedServers, setExpandedServers] = useState<Set<string>>(new Set());
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<TeamRole>("maintainer");
+  const [serverIgnores, setServerIgnores] = useState<Record<string, string>>({});
+  const [ignoreEditing, setIgnoreEditing] = useState<Set<string>>(new Set());
+
+  const DEFAULT_IGNORE = `# .ignore — files & folders excluded from deployment
+node_modules/
+.git/
+.env
+.env.*
+dist/
+build/
+*.log
+.DS_Store
+coverage/
+`;
 
   const toggleRepo = (id: string) =>
     setExpandedRepos((prev) => {
