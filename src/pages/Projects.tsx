@@ -23,7 +23,13 @@ import {
   ExternalLink,
   LayoutGrid,
   List as ListIcon,
+  FileText,
+  Upload,
+  Save,
+  Pencil,
+  RotateCcw,
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -405,6 +411,20 @@ const ProjectDetailsSheet = ({ project, open, onOpenChange, onUpdate, onNavigate
   const [expandedServers, setExpandedServers] = useState<Set<string>>(new Set());
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<TeamRole>("maintainer");
+  const [serverIgnores, setServerIgnores] = useState<Record<string, string>>({});
+  const [ignoreEditing, setIgnoreEditing] = useState<Set<string>>(new Set());
+
+  const DEFAULT_IGNORE = `# .ignore — files & folders excluded from deployment
+node_modules/
+.git/
+.env
+.env.*
+dist/
+build/
+*.log
+.DS_Store
+coverage/
+`;
 
   const toggleRepo = (id: string) =>
     setExpandedRepos((prev) => {
@@ -858,6 +878,144 @@ const ProjectDetailsSheet = ({ project, open, onOpenChange, onUpdate, onNavigate
                               Open <ExternalLink className="h-3 w-3" />
                             </Button>
                           </div>
+
+                          {/* .ignore file editor */}
+                          {(() => {
+                            const hasFile = serverIgnores[s.id] !== undefined;
+                            const isEditing = ignoreEditing.has(s.id);
+                            const value = serverIgnores[s.id] ?? "";
+                            const setEditing = (on: boolean) =>
+                              setIgnoreEditing((prev) => {
+                                const next = new Set(prev);
+                                if (on) next.add(s.id); else next.delete(s.id);
+                                return next;
+                              });
+                            return (
+                              <div className="rounded-md border border-border/60 bg-card/50 p-3 space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="h-3.5 w-3.5 text-primary" />
+                                  <div className="text-xs font-semibold">.ignore</div>
+                                  <span className="text-[10px] text-muted-foreground">
+                                    Patterns excluded from packaging & deployment
+                                  </span>
+                                  <div className="ml-auto flex items-center gap-1.5">
+                                    {hasFile && !isEditing && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 px-2 text-[11px]"
+                                        onClick={() => setEditing(true)}
+                                      >
+                                        <Pencil className="h-3 w-3" /> Edit
+                                      </Button>
+                                    )}
+                                    <label className="inline-flex">
+                                      <input
+                                        type="file"
+                                        accept=".ignore,.gitignore,text/plain"
+                                        className="hidden"
+                                        onChange={async (e) => {
+                                          const f = e.target.files?.[0];
+                                          if (!f) return;
+                                          const text = await f.text();
+                                          setServerIgnores((prev) => ({ ...prev, [s.id]: text }));
+                                          setEditing(true);
+                                          toast.success("Loaded from file", { description: f.name });
+                                          e.target.value = "";
+                                        }}
+                                      />
+                                      <Button
+                                        asChild
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 px-2 text-[11px]"
+                                      >
+                                        <span><Upload className="h-3 w-3" /> Upload</span>
+                                      </Button>
+                                    </label>
+                                  </div>
+                                </div>
+                                {!hasFile && !isEditing ? (
+                                  <div className="flex items-center justify-between gap-3 rounded border border-dashed border-border/60 px-3 py-3">
+                                    <div className="text-[11px] text-muted-foreground">
+                                      No .ignore file. Add one to skip files like <code className="font-mono">node_modules/</code> or <code className="font-mono">.env</code>.
+                                    </div>
+                                    <Button
+                                      variant="soft"
+                                      size="sm"
+                                      onClick={() => {
+                                        setServerIgnores((prev) => ({ ...prev, [s.id]: DEFAULT_IGNORE }));
+                                        setEditing(true);
+                                      }}
+                                    >
+                                      <Plus className="h-3.5 w-3.5" /> Add .ignore
+                                    </Button>
+                                  </div>
+                                ) : isEditing ? (
+                                  <>
+                                    <Textarea
+                                      value={value}
+                                      onChange={(e) =>
+                                        setServerIgnores((prev) => ({ ...prev, [s.id]: e.target.value }))
+                                      }
+                                      className="font-mono text-[11px] min-h-[160px] resize-y"
+                                      placeholder="# one pattern per line"
+                                      spellCheck={false}
+                                    />
+                                    <div className="flex items-center justify-between gap-2">
+                                      <div className="text-[10px] text-muted-foreground">
+                                        {value.split("\n").filter((l) => l.trim() && !l.trim().startsWith("#")).length} active patterns
+                                      </div>
+                                      <div className="flex items-center gap-1.5">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 px-2 text-[11px]"
+                                          onClick={() =>
+                                            setServerIgnores((prev) => ({ ...prev, [s.id]: DEFAULT_IGNORE }))
+                                          }
+                                        >
+                                          <RotateCcw className="h-3 w-3" /> Reset
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 px-2 text-[11px]"
+                                          onClick={() => {
+                                            setEditing(false);
+                                            if (!hasFile) {
+                                              setServerIgnores((prev) => {
+                                                const next = { ...prev };
+                                                delete next[s.id];
+                                                return next;
+                                              });
+                                            }
+                                          }}
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button
+                                          variant="brand"
+                                          size="sm"
+                                          className="h-7 px-2.5 text-[11px]"
+                                          onClick={() => {
+                                            setEditing(false);
+                                            toast.success(".ignore saved", { description: s.name });
+                                          }}
+                                        >
+                                          <Save className="h-3 w-3" /> Save
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <pre className="font-mono text-[11px] max-h-40 overflow-auto rounded bg-secondary/50 p-2 whitespace-pre-wrap break-all">
+                                    {value || "# empty"}
+                                  </pre>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                     </li>
