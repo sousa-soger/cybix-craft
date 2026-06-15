@@ -68,6 +68,8 @@ export interface Server {
   name: string;
   environment: Environment;
   host: string;
+  user: string;
+  port: number;
   protocol: "SSH" | "SFTP";
   path: string;
   status: "online" | "offline";
@@ -332,11 +334,11 @@ export const deployments: Deployment[] = [
 ];
 
 export const servers: Server[] = [
-  { id: "s1", name: "atlas-prod-eu-1", environment: "PROD", host: "10.20.4.11", protocol: "SSH", path: "/var/www/atlas", status: "online" },
-  { id: "s2", name: "atlas-dev-1", environment: "DEV", host: "10.20.4.12", protocol: "SSH", path: "/srv/atlas", status: "online" },
-  { id: "s3", name: "helios-qa-1", environment: "QA", host: "10.20.5.21", protocol: "SFTP", path: "/srv/helios", status: "online" },
-  { id: "s4", name: "helios-prod-eu-1", environment: "PROD", host: "10.20.5.22", protocol: "SSH", path: "/var/www/helios", status: "offline" },
-  { id: "s5", name: "nimbus-stage", environment: "QA", host: "10.20.6.30", protocol: "SSH", path: "/srv/nimbus", status: "online" },
+  { id: "s1", name: "atlas-prod-eu-1", environment: "PROD", host: "10.20.4.11", user: "deploy", port: 22, protocol: "SSH", path: "/var/www/atlas", status: "online" },
+  { id: "s2", name: "atlas-dev-1", environment: "DEV", host: "10.20.4.12", user: "deploy", port: 22, protocol: "SSH", path: "/srv/atlas", status: "online" },
+  { id: "s3", name: "helios-qa-1", environment: "QA", host: "10.20.5.21", user: "deploy", port: 22, protocol: "SFTP", path: "/srv/helios", status: "online" },
+  { id: "s4", name: "helios-prod-eu-1", environment: "PROD", host: "10.20.5.22", user: "deploy", port: 22, protocol: "SSH", path: "/var/www/helios", status: "offline" },
+  { id: "s5", name: "nimbus-stage", environment: "QA", host: "10.20.6.30", user: "deploy", port: 2222, protocol: "SSH", path: "/srv/nimbus", status: "online" },
 ];
 
 // Mock changeset for live intelligence
