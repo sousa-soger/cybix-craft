@@ -812,11 +812,14 @@ coverage/
                               {s.status === "online" ? "Online" : "Offline"}
                             </span>
                           </div>
-                          <div className="text-[10px] text-muted-foreground truncate mt-0.5 inline-flex items-center gap-1">
-                            {s.protocol} · {s.host}
+                          <div className="text-[10px] text-muted-foreground truncate mt-0.5">
+                            {project.name} · {s.host}
                           </div>
-                          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                            <EnvBadge env={s.environment} />
+                          <div className="text-[10px] text-muted-foreground truncate mt-0.5 font-mono">
+                            {s.user}@{s.host}:{s.port}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground truncate mt-0.5 font-mono">
+                            {s.path}
                           </div>
                         </div>
                         <ChevronDown
