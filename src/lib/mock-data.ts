@@ -68,6 +68,8 @@ export interface Server {
   name: string;
   environment: Environment;
   host: string;
+  user: string;
+  port: number;
   protocol: "SSH" | "SFTP";
   path: string;
   status: "online" | "offline";
