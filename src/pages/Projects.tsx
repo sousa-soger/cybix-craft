@@ -800,6 +800,7 @@ coverage/
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <div className="text-xs font-semibold font-mono truncate">{s.name}</div>
+                            <EnvBadge env={s.environment} />
                             <span
                               className={cn(
                                 "inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md border whitespace-nowrap",
