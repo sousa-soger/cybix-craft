@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EnvBadge, StatusBadge } from "@/components/badges";
+import { DeployFlow } from "@/components/deploy-flow";
 import { cn } from "@/lib/utils";
 import { packages, repositories, type PackageItem } from "@/lib/mock-data";
 
