@@ -181,11 +181,17 @@ const Packages = () => {
                 onOpenChange={(o) =>
                   setOpenMap((prev) => ({ ...prev, [repo.id]: o }))
                 }
+                onDeploy={setDeployPkg}
               />
             ))}
           </div>
         </>
       )}
+      <DeployFlow
+        pkg={deployPkg}
+        open={!!deployPkg}
+        onOpenChange={(v) => !v && setDeployPkg(null)}
+      />
     </AppShell>
   );
 };
