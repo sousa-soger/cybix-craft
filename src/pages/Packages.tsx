@@ -325,6 +325,7 @@ const RepoGroup = ({
                         size="sm"
                         variant="soft"
                         disabled={p.status !== "success"}
+                        onClick={() => onDeploy(p)}
                       >
                         <Rocket className="h-3.5 w-3.5" /> Deploy
                       </Button>
