@@ -64,10 +64,28 @@ const CreatePage = () => {
         </div>
 
         <TabsContent value="new" className="mt-5">
-          <CreatePackage />
+          <div
+            key={`new-${direction}`}
+            className={cn(
+              direction === "left"
+                ? "animate-slide-in-from-left"
+                : "animate-slide-in-from-right",
+            )}
+          >
+            <CreatePackage />
+          </div>
         </TabsContent>
         <TabsContent value="queue" className="mt-5">
-          <QueueList />
+          <div
+            key={`queue-${direction}`}
+            className={cn(
+              direction === "right"
+                ? "animate-slide-in-from-right"
+                : "animate-slide-in-from-left",
+            )}
+          >
+            <QueueList />
+          </div>
         </TabsContent>
       </Tabs>
     </AppShell>
