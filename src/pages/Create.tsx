@@ -13,6 +13,7 @@ const CreatePage = () => {
   const [params, setParams] = useSearchParams();
   const initial = params.get("view") === "queue" ? "queue" : "new";
   const [tab, setTab] = useState<string>(initial);
+  const [direction, setDirection] = useState<"left" | "right">("right");
   const jobs = useQueue();
   const activeCount = jobs.filter((j) => j.status === "queued" || j.status === "running").length;
   const bump = useQueueBump(1600);
@@ -24,6 +25,7 @@ const CreatePage = () => {
   }, [params]);
 
   const onTabChange = (v: string) => {
+    setDirection(v === "queue" ? "right" : "left");
     setTab(v);
     const next = new URLSearchParams(params);
     if (v === "queue") next.set("view", "queue");
