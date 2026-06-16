@@ -47,6 +47,7 @@ const Packages = () => {
   const [repoFilter, setRepoFilter] = useState<string>("all");
   const [creatorFilter, setCreatorFilter] = useState<string>("all");
   const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
+  const [deployPkg, setDeployPkg] = useState<PackageItem | null>(null);
 
   const creators = useMemo(
     () => Array.from(new Set(packages.map((p) => p.createdBy))).sort(),
