@@ -201,11 +201,13 @@ const RepoGroup = ({
   items,
   open,
   onOpenChange,
+  onDeploy,
 }: {
   repo: (typeof repositories)[number];
   items: PackageItem[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onDeploy: (pkg: PackageItem) => void;
 }) => {
   const owner = repo.members.find((m) => m.id === repo.ownerId);
   const uniqueCreators = Array.from(new Set(items.map((i) => i.createdBy)));
