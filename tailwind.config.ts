@@ -117,6 +117,14 @@ export default {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        "slide-in-from-right": {
+          from: { opacity: "0", transform: "translateX(24px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "slide-in-from-left": {
+          from: { opacity: "0", transform: "translateX(-24px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -124,6 +132,8 @@ export default {
         "fade-in": "fade-in 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
         "pulse-soft": "pulse-soft 1.8s ease-in-out infinite",
         shimmer: "shimmer 2.2s linear infinite",
+        "slide-in-from-right": "slide-in-from-right 0.28s cubic-bezier(0.22, 1, 0.36, 1)",
+        "slide-in-from-left": "slide-in-from-left 0.28s cubic-bezier(0.22, 1, 0.36, 1)",
       },
     },
   },

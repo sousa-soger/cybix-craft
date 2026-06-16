@@ -13,6 +13,7 @@ const CreatePage = () => {
   const [params, setParams] = useSearchParams();
   const initial = params.get("view") === "queue" ? "queue" : "new";
   const [tab, setTab] = useState<string>(initial);
+  const [direction, setDirection] = useState<"left" | "right">("right");
   const jobs = useQueue();
   const activeCount = jobs.filter((j) => j.status === "queued" || j.status === "running").length;
   const bump = useQueueBump(1600);
@@ -24,6 +25,7 @@ const CreatePage = () => {
   }, [params]);
 
   const onTabChange = (v: string) => {
+    setDirection(v === "queue" ? "right" : "left");
     setTab(v);
     const next = new URLSearchParams(params);
     if (v === "queue") next.set("view", "queue");
@@ -62,10 +64,28 @@ const CreatePage = () => {
         </div>
 
         <TabsContent value="new" className="mt-5">
-          <CreatePackage />
+          <div
+            key={`new-${direction}`}
+            className={cn(
+              direction === "left"
+                ? "animate-slide-in-from-left"
+                : "animate-slide-in-from-right",
+            )}
+          >
+            <CreatePackage />
+          </div>
         </TabsContent>
         <TabsContent value="queue" className="mt-5">
-          <QueueList />
+          <div
+            key={`queue-${direction}`}
+            className={cn(
+              direction === "right"
+                ? "animate-slide-in-from-right"
+                : "animate-slide-in-from-left",
+            )}
+          >
+            <QueueList />
+          </div>
         </TabsContent>
       </Tabs>
     </AppShell>

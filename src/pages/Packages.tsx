@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EnvBadge, StatusBadge } from "@/components/badges";
+import { DeployFlow } from "@/components/deploy-flow";
 import { cn } from "@/lib/utils";
 import { packages, repositories, type PackageItem } from "@/lib/mock-data";
 
@@ -46,6 +47,7 @@ const Packages = () => {
   const [repoFilter, setRepoFilter] = useState<string>("all");
   const [creatorFilter, setCreatorFilter] = useState<string>("all");
   const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
+  const [deployPkg, setDeployPkg] = useState<PackageItem | null>(null);
 
   const creators = useMemo(
     () => Array.from(new Set(packages.map((p) => p.createdBy))).sort(),
@@ -179,11 +181,17 @@ const Packages = () => {
                 onOpenChange={(o) =>
                   setOpenMap((prev) => ({ ...prev, [repo.id]: o }))
                 }
+                onDeploy={setDeployPkg}
               />
             ))}
           </div>
         </>
       )}
+      <DeployFlow
+        pkg={deployPkg}
+        open={!!deployPkg}
+        onOpenChange={(v) => !v && setDeployPkg(null)}
+      />
     </AppShell>
   );
 };
@@ -193,11 +201,13 @@ const RepoGroup = ({
   items,
   open,
   onOpenChange,
+  onDeploy,
 }: {
   repo: (typeof repositories)[number];
   items: PackageItem[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onDeploy: (pkg: PackageItem) => void;
 }) => {
   const owner = repo.members.find((m) => m.id === repo.ownerId);
   const uniqueCreators = Array.from(new Set(items.map((i) => i.createdBy)));
@@ -315,6 +325,7 @@ const RepoGroup = ({
                         size="sm"
                         variant="soft"
                         disabled={p.status !== "success"}
+                        onClick={() => onDeploy(p)}
                       >
                         <Rocket className="h-3.5 w-3.5" /> Deploy
                       </Button>
