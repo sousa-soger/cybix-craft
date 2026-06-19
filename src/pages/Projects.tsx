@@ -555,7 +555,7 @@ coverage/
                 </button>
               </div>
 
-              <div className={cn(!panelOpen.members && "hidden")}>
+              <div className={cn(panelOpen.members ? "block" : "hidden")}>
               <div className="rounded-xl border border-border/70 bg-card p-3 mb-3">
                 <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Add member</div>
                 <div className="flex flex-col gap-2">
