@@ -413,6 +413,9 @@ const ProjectDetailsSheet = ({ project, open, onOpenChange, onUpdate, onNavigate
   const [inviteRole, setInviteRole] = useState<TeamRole>("maintainer");
   const [serverIgnores, setServerIgnores] = useState<Record<string, string>>({});
   const [ignoreEditing, setIgnoreEditing] = useState<Set<string>>(new Set());
+  const [panelOpen, setPanelOpen] = useState({ members: true, repositories: true, servers: true });
+  const togglePanel = (key: keyof typeof panelOpen) =>
+    setPanelOpen((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const DEFAULT_IGNORE = `# .ignore — files & folders excluded from deployment
 node_modules/
@@ -541,14 +544,18 @@ coverage/
             {/* Members & Roles */}
             <section className="p-5 border-b lg:border-b-0 lg:border-r border-border/60 bg-secondary/20">
               <div className="flex items-center justify-between mb-3">
-                <div className="text-sm font-semibold inline-flex items-center gap-2">
-                  <Users className="h-4 w-4 text-primary" /> Members & Roles
-                  <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-secondary text-muted-foreground ml-1">
-                    {members.length}
-                  </span>
-                </div>
+                <button type="button" onClick={() => togglePanel("members")} className="flex items-center gap-2">
+                  <div className="text-sm font-semibold inline-flex items-center gap-2">
+                    <Users className="h-4 w-4 text-primary" /> Members & Roles
+                    <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-secondary text-muted-foreground ml-1">
+                      {members.length}
+                    </span>
+                  </div>
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", panelOpen.members && "rotate-180")} />
+                </button>
               </div>
 
+              <div className={cn(panelOpen.members ? "block" : "hidden")}>
               <div className="rounded-xl border border-border/70 bg-card p-3 mb-3">
                 <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Add member</div>
                 <div className="flex flex-col gap-2">
@@ -630,22 +637,26 @@ coverage/
                   );
                 })}
               </ul>
+            </div>
             </section>
 
             {/* Repository list */}
             <section className="p-5 border-b lg:border-b-0 lg:border-r border-border/60">
               <div className="flex items-center justify-between mb-3">
-                <div className="text-sm font-semibold inline-flex items-center gap-2">
-                  <GitBranch className="h-4 w-4 text-primary" /> Repositories
-                  <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-secondary text-muted-foreground ml-1">
-                    {repos.length}
-                  </span>
-                </div>
+                <button type="button" onClick={() => togglePanel("repositories")} className="flex items-center gap-2">
+                  <div className="text-sm font-semibold inline-flex items-center gap-2">
+                    <GitBranch className="h-4 w-4 text-primary" /> Repositories
+                    <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-secondary text-muted-foreground ml-1">
+                      {repos.length}
+                    </span>
+                  </div>
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", panelOpen.repositories && "rotate-180")} />
+                </button>
                 <Button variant="ghost" size="sm" onClick={() => onNavigate("/repositories")}>
                   <Plus className="h-3.5 w-3.5" /> Attach
                 </Button>
               </div>
-              <ul className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+              <ul className={cn("space-y-2 max-h-[500px] overflow-y-auto pr-1", !panelOpen.repositories && "hidden")}>
                 {repos.map((r) => {
                   const isOpen = expandedRepos.has(r.id);
                   const authLabel = AUTH_LABEL[r.authMethod] ?? r.authMethod;
@@ -770,17 +781,20 @@ coverage/
             {/* Servers */}
             <section className="p-5 bg-secondary/10">
               <div className="flex items-center justify-between mb-3">
-                <div className="text-sm font-semibold inline-flex items-center gap-2">
-                  <ServerIcon className="h-4 w-4 text-primary" /> Servers
-                  <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-secondary text-muted-foreground ml-1">
-                    {servers.length}
-                  </span>
-                </div>
+                <button type="button" onClick={() => togglePanel("servers")} className="flex items-center gap-2">
+                  <div className="text-sm font-semibold inline-flex items-center gap-2">
+                    <ServerIcon className="h-4 w-4 text-primary" /> Servers
+                    <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-secondary text-muted-foreground ml-1">
+                      {servers.length}
+                    </span>
+                  </div>
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", panelOpen.servers && "rotate-180")} />
+                </button>
                 <Button variant="ghost" size="sm" onClick={() => onNavigate("/servers")}>
                   <Plus className="h-3.5 w-3.5" /> Add
                 </Button>
               </div>
-              <ul className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+              <ul className={cn("space-y-2 max-h-[500px] overflow-y-auto pr-1", !panelOpen.servers && "hidden")}>
                 {servers.map((s) => {
                   const isOpen = expandedServers.has(s.id);
                   return (
