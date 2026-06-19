@@ -656,7 +656,7 @@ coverage/
                   <Plus className="h-3.5 w-3.5" /> Attach
                 </Button>
               </div>
-              <ul className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+              <ul className={cn("space-y-2 max-h-[500px] overflow-y-auto pr-1", !panelOpen.repositories && "hidden")}>
                 {repos.map((r) => {
                   const isOpen = expandedRepos.has(r.id);
                   const authLabel = AUTH_LABEL[r.authMethod] ?? r.authMethod;
@@ -794,7 +794,7 @@ coverage/
                   <Plus className="h-3.5 w-3.5" /> Add
                 </Button>
               </div>
-              <ul className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+              <ul className={cn("space-y-2 max-h-[500px] overflow-y-auto pr-1", !panelOpen.servers && "hidden")}>
                 {servers.map((s) => {
                   const isOpen = expandedServers.has(s.id);
                   return (
