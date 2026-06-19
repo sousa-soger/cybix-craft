@@ -413,6 +413,9 @@ const ProjectDetailsSheet = ({ project, open, onOpenChange, onUpdate, onNavigate
   const [inviteRole, setInviteRole] = useState<TeamRole>("maintainer");
   const [serverIgnores, setServerIgnores] = useState<Record<string, string>>({});
   const [ignoreEditing, setIgnoreEditing] = useState<Set<string>>(new Set());
+  const [panelOpen, setPanelOpen] = useState({ members: true, repositories: true, servers: true });
+  const togglePanel = (key: keyof typeof panelOpen) =>
+    setPanelOpen((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const DEFAULT_IGNORE = `# .ignore — files & folders excluded from deployment
 node_modules/
