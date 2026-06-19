@@ -637,6 +637,7 @@ coverage/
                   );
                 })}
               </ul>
+            </div>
             </section>
 
             {/* Repository list */}
